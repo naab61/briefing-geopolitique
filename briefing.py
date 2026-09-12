@@ -9,40 +9,43 @@ GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
 TELEGRAM_BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 TELEGRAM_CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
 
-RSS_URL = "https://orientxxi.info/?page=backend&lang=fr"
-
+RSS_URLS = [
+    "https://www.france24.com/fr/rss",
+    "https://www.rfi.fr/fr/rss",
+    "https://www.lemonde.fr/international/rss_full.xml",
+]
 
 def get_articles():
-    request = urllib.request.Request(
-        RSS_URL,
-        headers={"User-Agent": "Mozilla/5.0"}
-    )
-
-    request.add_header("User-Agent", "Mozilla/5.0 (compatible; BriefingGeopolitique/1.0)")
-    with urllib.request.urlopen(request, timeout=30) as response:
-        data = response.read()
-
-    root = ET.fromstring(data)
     articles = []
 
-    for item in root.findall(".//item"):
-        title = item.findtext("title", "")
-        description = item.findtext("description", "")
-        link = item.findtext("link", "")
-        date = item.findtext("{http://purl.org/dc/elements/1.1/}date", "")
+    for rss_url in RSS_URLS:
+        try:
+            request = urllib.request.Request(
+                rss_url,
+                headers={"User-Agent": "Mozilla/5.0"}
+            )
 
-        title = unescape(title).strip()
-        description = unescape(description).strip()
+            with urllib.request.urlopen(request, timeout=30) as response:
+                data = response.read()
 
-        if title:
-            articles.append({
-                "title": title,
-                "description": description,
-                "link": link,
-                "date": date
-            })
+            root = ET.fromstring(data)
 
-    return articles[:15]
+            for item in root.findall(".//item"):
+                title = item.findtext("title", "").strip()
+                link = item.findtext("link", "").strip()
+                description = item.findtext("description", "").strip()
+
+                if title:
+                    articles.append({
+                        "title": unescape(title),
+                        "link": link,
+                        "description": unescape(description)
+                    })
+
+        except Exception as e:
+            print(f"Flux ignoré: {rss_url} — {e}")
+
+    return articles[:30]
 
 
 def ask_gemini(articles):
