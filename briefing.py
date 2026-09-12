@@ -40,6 +40,7 @@ def get_articles():
                         "title": unescape(title),
                         "link": link,
                         "description": unescape(description)
+                        "date": item.findtext("pubDate", "")
                     })
 
         except Exception as e:
