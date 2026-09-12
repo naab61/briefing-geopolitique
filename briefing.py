@@ -52,20 +52,19 @@ def get_articles():
 def ask_gemini(articles):
     sources = []
 
-    for article in articles:
+    for article in articles[:15]:
         sources.append(
-            f"TITRE: {article['title']}\n"
-            f"DATE: {article['date']}\n"
-            f"DESCRIPTION: {article['description']}\n"
-            f"SOURCE: {article['link']}\n"
+            f"TITRE: {article.get('title', '')}\n"
+            f"DATE: {article.get('date', '')}\n"
+            f"DESCRIPTION: {article.get('description', '')[:800]}\n"
+            f"SOURCE: {article.get('link', '')}\n"
         )
 
     prompt = """Tu es un analyste géopolitique francophone.
 
-À partir UNIQUEMENT des informations fournies ci-dessous, rédige un briefing géopolitique quotidien clair et utile.
+À partir UNIQUEMENT des sources fournies, rédige un briefing quotidien.
 
-Structure obligatoire :
-
+Sections :
 🌍 GRANDES TENDANCES
 🟠 MOYEN-ORIENT
 🔴 UKRAINE / RUSSIE
@@ -78,22 +77,20 @@ Structure obligatoire :
 🔭 SCÉNARIOS 24–72H
 📅 SCÉNARIOS À 7 JOURS
 
-Pour chaque information importante, utilise obligatoirement une classification :
+Classification obligatoire :
 🟢 confirmé
 🟡 plausible / non confirmé
 🔵 analyse
 🟣 récit d’un camp ou d’une communauté
 
-Règles importantes :
-- Ne transforme jamais une hypothèse en fait.
-- Les publications sur les réseaux sociaux ne constituent jamais à elles seules une preuve.
-- Sépare clairement faits, hypothèses, récits et analyse.
-- Si les sources fournies ne permettent pas de parler d'un sujet, dis-le brièvement plutôt que d'inventer.
-- Sois concis mais analytique.
-- Français naturel.
-- Maximum environ 3500 caractères.
+Ne présente jamais une hypothèse comme un fait.
+Les réseaux sociaux ne sont jamais une preuve à eux seuls.
+N'invente aucune information absente des sources.
+Sois concis et analytique.
+Réponds uniquement en français.
+Maximum 3000 caractères.
 
-Voici les sources disponibles :
+SOURCES :
 
 """ + "\n".join(sources)
 
@@ -105,6 +102,7 @@ Voici les sources disponibles :
     payload = {
         "contents": [
             {
+                "role": "user",
                 "parts": [
                     {"text": prompt}
                 ]
@@ -122,11 +120,15 @@ Voici les sources disponibles :
         method="POST"
     )
 
-    with urllib.request.urlopen(request, timeout=60) as response:
-        result = json.loads(response.read().decode("utf-8"))
+    try:
+        with urllib.request.urlopen(request, timeout=60) as response:
+            result = json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as e:
+        error_body = e.read().decode("utf-8", errors="replace")
+        print("ERREUR GEMINI :", error_body)
+        raise
 
     return result["candidates"][0]["content"]["parts"][0]["text"]
-
 
 def send_telegram(text):
     url = (
