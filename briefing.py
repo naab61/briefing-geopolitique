@@ -25,11 +25,6 @@ SOURCES = [
         "url": "https://www.crisisgroup.org/rss",
     },
     {
-        "name": "International Crisis Group — CrisisWatch",
-        "type": "ALERTE / CONFLITS",
-        "url": "https://www.crisisgroup.org/rss/crisiswatch",
-    },
-    {
         "name": "France 24",
         "type": "MÉDIA GÉNÉRALISTE — RADAR",
         "url": "https://www.france24.com/fr/rss",
@@ -344,23 +339,61 @@ def send_telegram(text):
         f"{TELEGRAM_BOT_TOKEN}/sendMessage"
     )
 
-    data = urllib.parse.urlencode({
-        "chat_id": TELEGRAM_CHAT_ID,
-        "text": text,
-        "disable_web_page_preview": "false",
-    }).encode("utf-8")
+    # Telegram limite les messages texte à 4096 caractères.
+    # On garde une marge de sécurité.
+    max_length = 3900
 
-    request = urllib.request.Request(
-        url,
-        data=data,
-        method="POST"
-    )
+    chunks = []
 
-    with urllib.request.urlopen(
-        request,
-        timeout=30
-    ) as response:
-        return response.read().decode("utf-8")
+    while len(text) > max_length:
+        # Cherche une coupure propre
+        cut = text.rfind("\n", 0, max_length)
+
+        if cut < 1000:
+            cut = max_length
+
+        chunks.append(text[:cut])
+        text = text[cut:].lstrip()
+
+    if text:
+        chunks.append(text)
+
+    for i, chunk in enumerate(chunks):
+        data = urllib.parse.urlencode({
+            "chat_id": TELEGRAM_CHAT_ID,
+            "text": chunk,
+            "disable_web_page_preview": "false",
+        }).encode("utf-8")
+
+        request = urllib.request.Request(
+            url,
+            data=data,
+            method="POST"
+        )
+
+        try:
+            with urllib.request.urlopen(
+                request,
+                timeout=30
+            ) as response:
+                result = response.read().decode("utf-8")
+
+            print(
+                f"Telegram: partie {i + 1}/{len(chunks)} envoyée."
+            )
+
+        except urllib.error.HTTPError as e:
+            error_body = e.read().decode(
+                "utf-8",
+                errors="replace"
+            )
+
+            print(
+                "ERREUR TELEGRAM :",
+                error_body
+            )
+
+            raise
 
 
 def main():
