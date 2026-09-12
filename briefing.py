@@ -96,7 +96,7 @@ SOURCES :
 
     url = (
         "https://generativelanguage.googleapis.com/v1beta/"
-        "models/gemini-2.5-flash-lite:generateContent"
+        "models/gemini-3.5-flash-lite:generateContent"
     )
 
     payload = {
