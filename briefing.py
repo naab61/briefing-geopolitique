@@ -1,236 +1,694 @@
 import os
 import json
+import re
 import urllib.request
 import urllib.parse
 import urllib.error
 import xml.etree.ElementTree as ET
 from html import unescape
+from html.parser import HTMLParser
+
 
 GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
 TELEGRAM_BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 TELEGRAM_CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
 
-# Sources classées par fonction.
-# Les médias généralistes servent surtout de radar.
-# Les sources d'enquête/analyse ont davantage de poids pour l'analyse.
-SOURCES = [
+
+# ============================================================
+# SOURCES
+# ============================================================
+
+RSS_SOURCES = [
     {
         "name": "OCCRP — investigations",
         "type": "ENQUÊTE / OSINT",
         "url": "https://www.occrp.org/en/investigations/feed",
     },
     {
-        "name": "International Crisis Group — global",
+        "name": "International Crisis Group",
         "type": "ANALYSE / CONFLITS",
         "url": "https://www.crisisgroup.org/rss",
     },
     {
         "name": "France 24",
-        "type": "MÉDIA GÉNÉRALISTE — RADAR",
+        "type": "MÉDIA — RADAR",
         "url": "https://www.france24.com/fr/rss",
     },
     {
         "name": "RFI",
-        "type": "MÉDIA GÉNÉRALISTE — RADAR",
+        "type": "MÉDIA — RADAR",
         "url": "https://www.rfi.fr/fr/rss",
     },
     {
         "name": "Le Monde — international",
-        "type": "MÉDIA GÉNÉRALISTE — RADAR",
+        "type": "MÉDIA — RADAR",
         "url": "https://www.lemonde.fr/international/rss_full.xml",
     },
 ]
 
 
-def get_articles():
+TELEGRAM_CHANNELS = [
+    {
+        "name": "Telegram — OSINTdefender",
+        "type": "RÉSEAUX SOCIAUX / OSINT",
+        "channel": "osintdefender",
+    },
+    {
+        "name": "Telegram — Twitter/TikTok / GeoConfirmed",
+        "type": "RÉSEAUX SOCIAUX / GÉOLOCALISATION",
+        "channel": "csources",
+    },
+]
+
+
+BELLINGCAT_URL = "https://www.bellingcat.com/news/"
+
+
+# ============================================================
+# OUTILS
+# ============================================================
+
+def clean_html(text):
+    text = re.sub(r"<br\s*/?>", "\n", text, flags=re.I)
+    text = re.sub(r"<[^>]+>", " ", text)
+    text = unescape(text)
+    text = " ".join(text.split())
+    return text.strip()
+
+
+def clean_text(text, max_length=1000):
+    text = clean_html(text)
+    return text[:max_length]
+
+
+# ============================================================
+# RSS
+# ============================================================
+
+def get_rss_articles():
     articles = []
 
-    for source in SOURCES:
+    for source in RSS_SOURCES:
         try:
             request = urllib.request.Request(
                 source["url"],
                 headers={
-                    "User-Agent": "Mozilla/5.0 "
-                    "(compatible; BriefingGeopolitique/2.0)"
+                    "User-Agent":
+                        "Mozilla/5.0 "
+                        "(compatible; BriefingGeopolitique/3.0)"
                 }
             )
 
-            with urllib.request.urlopen(request, timeout=30) as response:
+            with urllib.request.urlopen(
+                request,
+                timeout=30
+            ) as response:
                 data = response.read()
 
             root = ET.fromstring(data)
 
-            # RSS classique
             items = root.findall(".//item")
 
-            # Support minimal des flux Atom
             if not items:
-                ns = {"atom": "http://www.w3.org/2005/Atom"}
-                items = root.findall(".//atom:entry", ns)
+                ns = {
+                    "atom": "http://www.w3.org/2005/Atom"
+                }
+                items = root.findall(
+                    ".//atom:entry",
+                    ns
+                )
 
-            for item in items:
+            count = 0
+
+            for item in items[:20]:
+
                 title = ""
                 link = ""
                 description = ""
                 date = ""
 
                 # RSS
-                title_node = item.find("title")
-                if title_node is not None and title_node.text:
-                    title = title_node.text.strip()
+                node = item.find("title")
+                if node is not None and node.text:
+                    title = node.text.strip()
 
-                link_node = item.find("link")
-                if link_node is not None and link_node.text:
-                    link = link_node.text.strip()
+                node = item.find("link")
+                if node is not None and node.text:
+                    link = node.text.strip()
 
-                description_node = item.find("description")
-                if description_node is not None and description_node.text:
-                    description = description_node.text.strip()
+                node = item.find("description")
+                if node is not None and node.text:
+                    description = node.text.strip()
 
-                date_node = item.find("pubDate")
-                if date_node is not None and date_node.text:
-                    date = date_node.text.strip()
+                node = item.find("pubDate")
+                if node is not None and node.text:
+                    date = node.text.strip()
 
                 # Atom
                 if not title:
-                    ns = {"atom": "http://www.w3.org/2005/Atom"}
+                    ns = {
+                        "atom":
+                        "http://www.w3.org/2005/Atom"
+                    }
 
-                    title_node = item.find("atom:title", ns)
-                    if title_node is not None and title_node.text:
-                        title = title_node.text.strip()
+                    node = item.find(
+                        "atom:title",
+                        ns
+                    )
+                    if node is not None and node.text:
+                        title = node.text.strip()
 
-                    link_node = item.find("atom:link", ns)
-                    if link_node is not None:
-                        link = link_node.attrib.get("href", "").strip()
+                    node = item.find(
+                        "atom:link",
+                        ns
+                    )
+                    if node is not None:
+                        link = node.attrib.get(
+                            "href",
+                            ""
+                        )
 
-                    summary_node = item.find("atom:summary", ns)
-                    if summary_node is not None and summary_node.text:
-                        description = summary_node.text.strip()
+                    node = item.find(
+                        "atom:summary",
+                        ns
+                    )
+                    if node is not None and node.text:
+                        description = node.text.strip()
 
-                    date_node = item.find("atom:updated", ns)
-                    if date_node is not None and date_node.text:
-                        date = date_node.text.strip()
+                    node = item.find(
+                        "atom:updated",
+                        ns
+                    )
+                    if node is not None and node.text:
+                        date = node.text.strip()
 
                 if title:
                     articles.append({
                         "title": unescape(title),
                         "link": link,
-                        "description": unescape(description),
+                        "description":
+                            unescape(description),
                         "date": date,
                         "source": source["name"],
                         "type": source["type"],
                     })
 
+                    count += 1
+
             print(
                 f"Source OK: {source['name']} "
-                f"({len(items)} éléments)"
+                f"({count} éléments)"
             )
 
         except Exception as e:
             print(
-                f"Source ignorée: {source['name']} "
-                f"— {e}"
+                f"Source ignorée: "
+                f"{source['name']} — {e}"
             )
 
     return articles
 
 
-def clean_text(text, max_length=900):
-    text = text.replace("<![CDATA[", "")
-    text = text.replace("]]>", "")
-    text = " ".join(text.split())
-    return text[:max_length]
+# ============================================================
+# TELEGRAM PUBLIC
+# ============================================================
 
+class TelegramPostParser(HTMLParser):
+
+    def __init__(self):
+        super().__init__()
+
+        self.in_post = False
+        self.current_text = []
+        self.current_post_id = None
+
+        self.posts = []
+
+    def handle_starttag(self, tag, attrs):
+
+        attrs = dict(attrs)
+
+        classes = attrs.get(
+            "class",
+            ""
+        )
+
+        # Conteneur d'un message Telegram
+        if (
+            "tgme_widget_message_wrap"
+            in classes
+        ):
+            self.in_post = True
+            self.current_text = []
+
+            self.current_post_id = attrs.get(
+                "data-post"
+            )
+
+        # Texte du message
+        if (
+            self.in_post
+            and "tgme_widget_message_text"
+            in classes
+        ):
+            self.current_text = []
+
+    def handle_data(self, data):
+
+        if self.in_post:
+            data = data.strip()
+
+            if data:
+                self.current_text.append(data)
+
+    def handle_endtag(self, tag):
+
+        if tag == "div" and self.in_post:
+
+            text = " ".join(
+                self.current_text
+            ).strip()
+
+            if (
+                text
+                and len(text) > 30
+            ):
+                self.posts.append({
+                    "text": text,
+                    "post_id":
+                        self.current_post_id
+                })
+
+            self.in_post = False
+            self.current_text = []
+
+
+def get_telegram_articles():
+    articles = []
+
+    for channel in TELEGRAM_CHANNELS:
+
+        username = channel["channel"]
+
+        url = (
+            f"https://t.me/s/"
+            f"{username}"
+        )
+
+        try:
+            request = urllib.request.Request(
+                url,
+                headers={
+                    "User-Agent":
+                        "Mozilla/5.0 "
+                        "(compatible; "
+                        "BriefingGeopolitique/3.0)"
+                }
+            )
+
+            with urllib.request.urlopen(
+                request,
+                timeout=30
+            ) as response:
+                html = response.read().decode(
+                    "utf-8",
+                    errors="replace"
+                )
+
+            parser = TelegramPostParser()
+            parser.feed(html)
+
+            posts = parser.posts[-15:]
+
+            for post in posts:
+
+                post_id = post.get(
+                    "post_id"
+                )
+
+                link = ""
+
+                if post_id:
+                    link = (
+                        "https://t.me/"
+                        + post_id
+                    )
+
+                articles.append({
+                    "title":
+                        "Publication Telegram",
+                    "link": link,
+                    "description":
+                        post["text"],
+                    "date": "",
+                    "source":
+                        channel["name"],
+                    "type":
+                        channel["type"],
+                })
+
+            print(
+                f"Social OK: "
+                f"{channel['name']} "
+                f"({len(posts)} publications)"
+            )
+
+        except Exception as e:
+
+            print(
+                f"Social ignoré: "
+                f"{channel['name']} — {e}"
+            )
+
+    return articles
+
+
+# ============================================================
+# BELLINGCAT
+# ============================================================
+
+def get_bellingcat_articles():
+
+    articles = []
+
+    try:
+
+        request = urllib.request.Request(
+            BELLINGCAT_URL,
+            headers={
+                "User-Agent":
+                    "Mozilla/5.0 "
+                    "(compatible; "
+                    "BriefingGeopolitique/3.0)"
+            }
+        )
+
+        with urllib.request.urlopen(
+            request,
+            timeout=30
+        ) as response:
+            html = response.read().decode(
+                "utf-8",
+                errors="replace"
+            )
+
+        # On récupère les liens vers les articles.
+        matches = re.findall(
+            r'href=["\']([^"\']+)["\'][^>]*>'
+            r'\s*([^<]{20,200})',
+            html,
+            flags=re.I
+        )
+
+        seen = set()
+
+        for link, title in matches:
+
+            title = clean_text(title, 250)
+
+            if not title:
+                continue
+
+            if link.startswith("/"):
+                link = (
+                    "https://www.bellingcat.com"
+                    + link
+                )
+
+            if (
+                "bellingcat.com"
+                not in link
+            ):
+                continue
+
+            if link in seen:
+                continue
+
+            seen.add(link)
+
+            articles.append({
+                "title": title,
+                "link": link,
+                "description":
+                    "Investigation Bellingcat "
+                    "issue de sources ouvertes.",
+                "date": "",
+                "source":
+                    "Bellingcat",
+                "type":
+                    "OSINT / GÉOLOCALISATION / SATELLITE",
+            })
+
+            if len(articles) >= 15:
+                break
+
+        print(
+            f"Source OK: Bellingcat "
+            f"({len(articles)} éléments)"
+        )
+
+    except Exception as e:
+
+        print(
+            f"Source ignorée: "
+            f"Bellingcat — {e}"
+        )
+
+    return articles
+
+
+# ============================================================
+# GEMINI
+# ============================================================
 
 def ask_gemini(articles):
-    # On limite le volume envoyé à Gemini pour rester léger.
-    selected = articles[:40]
+
+    # On donne une vraie priorité aux sources OSINT
+    # et sociales, plutôt qu'aux médias généralistes.
+
+    priority = {
+        "ENQUÊTE / OSINT": 1,
+        "OSINT / GÉOLOCALISATION / SATELLITE": 1,
+        "RÉSEAUX SOCIAUX / GÉOLOCALISATION": 2,
+        "RÉSEAUX SOCIAUX / OSINT": 2,
+        "ANALYSE / CONFLITS": 3,
+        "MÉDIA — RADAR": 4,
+    }
+
+    articles = sorted(
+        articles,
+        key=lambda x:
+            priority.get(
+                x.get("type", ""),
+                5
+            )
+    )
+
+    selected = articles[:55]
 
     sources = []
 
-    for i, article in enumerate(selected, start=1):
+    for i, article in enumerate(
+        selected,
+        start=1
+    ):
+
         sources.append(
             f"""
 SOURCE {i}
-Type : {article.get('type', '')}
-Nom : {article.get('source', '')}
-Titre : {article.get('title', '')}
-Date : {article.get('date', '')}
-Description : {clean_text(article.get('description', ''))}
-Lien : {article.get('link', '')}
+
+TYPE :
+{article.get('type', '')}
+
+SOURCE :
+{article.get('source', '')}
+
+TITRE :
+{article.get('title', '')}
+
+DATE :
+{article.get('date', '')}
+
+CONTENU :
+{clean_text(
+    article.get(
+        'description',
+        ''
+    ),
+    1100
+)}
+
+LIEN :
+{article.get('link', '')}
 """.strip()
         )
 
     prompt = """
-Tu es un analyste géopolitique francophone spécialisé en OSINT,
-renseignement en sources ouvertes, conflits, influence informationnelle
+
+Tu es un analyste géopolitique francophone
+spécialisé en OSINT, renseignement en sources
+ouvertes, conflits, influence informationnelle
 et analyse stratégique.
 
-OBJECTIF
+Ta mission n'est PAS de résumer mécaniquement
+les articles.
 
-Produire un briefing quotidien réellement utile à quelqu'un qui suit
-la géopolitique sérieusement.
+Tu dois chercher les signaux, les contradictions,
+les évolutions et les éléments vérifiables.
 
-Tu dois faire le travail de tri et de confrontation des informations.
-Ne te contente surtout pas de résumer les titres.
-
+========================
 HIÉRARCHIE DES SOURCES
+========================
 
-1. ENQUÊTES / OSINT / DOCUMENTS
-2. SOURCES PRIMAIRES ou données directement observables
-3. SOURCES LOCALES
-4. ORGANISMES spécialisés dans les conflits
-5. ANALYSES spécialisées
-6. MÉDIAS GÉNÉRALISTES
+PRIORITÉ FORTE :
 
-Les médias généralistes présents ici sont principalement des radars.
-Ils peuvent signaler un événement important, mais ne doivent pas
-automatiquement devenir la preuve de cet événement.
+- enquête journalistique
+- OSINT
+- géolocalisation
+- imagerie satellite
+- documents
+- données
+- sources locales spécialisées
 
-RÈGLES DE VÉRIFICATION
+PRIORITÉ MOYENNE :
 
-- Une seule source = ne pas présenter comme confirmé si l'information
-  est contestable.
-- Deux articles qui reprennent la même dépêche ou la même déclaration
-  ne constituent PAS deux confirmations indépendantes.
-- Distingue toujours un fait observé, une déclaration, une affirmation
-  d'un camp, une hypothèse et ton analyse.
-- Si les sources se contredisent, conserve la contradiction.
-- Si les éléments sont insuffisants, écris explicitement :
-  "preuves insuffisantes".
-- Ne complète jamais les trous avec ton imagination.
-- N'invente aucun chiffre, lieu, acteur, date ou événement.
-- Les réseaux sociaux ne sont jamais une preuve suffisante à eux seuls.
-- Une déclaration officielle n'est pas automatiquement un fait établi.
-  Indique qui affirme quoi.
-- Ne transforme pas une analyse de Crisis Group ou d'un autre expert
-  en fait.
-- Cherche les signaux faibles : changement de vocabulaire officiel,
-  mouvement diplomatique, sanctions, nominations, déploiements,
-  ruptures commerciales, évolution narrative, activité informationnelle,
-  tensions régionales, changements de posture.
-- Porte une attention permanente au Maroc et au Maghreb.
-- Porte une attention particulière aux évolutions inhabituelles
-  concernant Donald Trump et à la manipulation médiatique/informationnelle.
-- Cherche les conséquences possibles pour la France et l'Europe.
+- analyses spécialisées
+- organismes spécialisés dans les conflits
 
-CLASSIFICATION OBLIGATOIRE
+PRIORITÉ FAIBLE :
 
-🟢 CONFIRMÉ
-Fait solidement étayé par les sources disponibles.
+- médias généralistes
 
-🟡 PLAUSIBLE / NON CONFIRMÉ
-Élément crédible mais insuffisamment établi.
+Les médias généralistes servent surtout
+de radar.
 
-🔵 ANALYSE
-Interprétation ou déduction analytique clairement présentée comme telle.
+========================
+RÉSEAUX SOCIAUX
+========================
 
-🟣 RÉCIT / NARRATIVE
-Ce qu'affirme ou diffuse un gouvernement, un mouvement,
-un camp politique, une communauté ou un réseau informationnel.
-Ne pas présenter ce récit comme un fait.
+Les publications Telegram, X/Twitter et autres
+contenus sociaux sont des SIGNAUX.
 
+Ils ne constituent PAS automatiquement une preuve.
+
+Pour chaque signal social important :
+
+1. indique ce qui est affirmé ;
+2. indique qui le diffuse ;
+3. cherche dans les autres sources fournies
+   un élément de corroboration ;
+4. indique si le signal est corroboré ;
+5. indique s'il est contradictoire ;
+6. indique s'il ressemble à une narrative,
+   une opération d'influence ou du recyclage.
+
+Une publication sociale seule doit normalement
+être classée :
+
+🟡 plausible / non confirmé
+
+ou
+
+🟣 récit / narrative
+
+sauf si elle est ensuite corroborée
+par une source indépendante.
+
+========================
+OSINT
+========================
+
+Porte une attention particulière à :
+
+- géolocalisation
+- vidéos
+- images
+- mouvements militaires
+- frappes
+- infrastructures
+- navires
+- aéronefs
+- satellites
+- changements de terrain
+- destructions
+- sanctions
+- mouvements diplomatiques
+- changements de posture militaire
+- réseaux d'influence
+- propagande
+- désinformation
+
+Ne prétends jamais avoir vérifié une image
+ou une vidéo si les données fournies ne permettent
+pas de le faire.
+
+========================
+DÉTECTION DE NARRATIVES
+========================
+
+Repère :
+
+- narrative russe
+- narrative ukrainienne
+- narrative américaine
+- narrative chinoise
+- narrative iranienne
+- narrative israélienne
+- narrative palestinienne
+- narrative européenne
+- narrative française
+- narratifs d'acteurs locaux
+
+Une narrative doit être présentée comme
+une narrative, pas comme un fait.
+
+========================
+RÈGLE DE CORROBORATION
+========================
+
+Deux comptes sociaux qui recopient la même
+information = UNE SEULE source.
+
+Deux médias qui reprennent la même dépêche
+= UNE SEULE source indépendante.
+
+Une déclaration officielle ≠ preuve indépendante.
+
+Si les éléments ne permettent pas de conclure :
+
+Écris clairement :
+
+"preuves insuffisantes"
+
+========================
+SURVEILLANCE PERMANENTE
+========================
+
+Surveille particulièrement :
+
+🇲🇦 Maroc / Maghreb
+
+🇺🇸 Donald Trump / États-Unis
+
+🇷🇺 Russie
+
+🇺🇦 Ukraine
+
+🇮🇱 Israël / Palestine
+
+🇮🇷 Iran
+
+🇨🇳 Chine / Indo-Pacifique
+
+🇪🇺 Europe
+
+🌍 Afrique / Sahel
+
+🌍 Sud global
+
+========================
 FORMAT
+========================
 
 🌍 GRANDES TENDANCES
 
@@ -248,42 +706,76 @@ FORMAT
 
 🇲🇦 MAROC / MAGHREB
 
-📱 TENDANCES SOCIALES / DÉSINFORMATION
+📱 RÉSEAUX SOCIAUX / OSINT
 
-🇫🇷 CONSÉQUENCES POUR LA FRANCE ET L’EUROPE
+🧠 NARRATIVES ET DÉSINFORMATION
+
+🇫🇷 CONSÉQUENCES POUR LA FRANCE ET L'EUROPE
 
 🔭 SCÉNARIOS 24–72H
 
 📅 SCÉNARIOS À 7 JOURS
 
-À la fin, ajoute :
-
 🔎 SOURCES CLÉS
-- maximum 5 liens réellement importants
-- privilégie les enquêtes, documents, sources spécialisées ou
-  éléments permettant de vérifier l'information
 
-CONTRAINTES
+Maximum 5 liens.
 
-- Français uniquement.
-- Style direct, dense et analytique.
-- Pas de remplissage.
-- Pas de répétition.
-- Maximum 3800 caractères.
-- Les liens doivent rester cliquables.
-- Ne cite que les liens réellement fournis dans les sources.
-- Si aucune information sérieuse n'existe sur une section, écris :
-  "Pas de signal solide dans les sources disponibles."
-- Ne force jamais une actualité dans une catégorie simplement
-  pour remplir la section.
+Privilégie :
+
+- OSINT
+- enquêtes
+- documents
+- sources sociales originales
+- analyses spécialisées
+
+========================
+CLASSIFICATION
+========================
+
+🟢 CONFIRMÉ
+
+🟡 PLAUSIBLE / NON CONFIRMÉ
+
+🔵 ANALYSE
+
+🟣 RÉCIT / NARRATIVE
+
+========================
+STYLE
+========================
+
+Français uniquement.
+
+Direct.
+
+Dense.
+
+Analytique.
+
+Pas de remplissage.
+
+Pas de répétition.
+
+Ne force aucune information.
+
+Si aucune information sérieuse
+n'est disponible :
+
+"Pas de signal solide dans les sources disponibles."
+
+Maximum 3800 caractères.
+
+========================
 
 SOURCES DISPONIBLES :
 
 """ + "\n\n".join(sources)
 
     url = (
-        "https://generativelanguage.googleapis.com/v1beta/"
-        "models/gemini-3.5-flash-lite:generateContent"
+        "https://generativelanguage.googleapis.com/"
+        "v1beta/models/"
+        "gemini-3.5-flash-lite:"
+        "generateContent"
     )
 
     payload = {
@@ -291,7 +783,9 @@ SOURCES DISPONIBLES :
             {
                 "role": "user",
                 "parts": [
-                    {"text": prompt}
+                    {
+                        "text": prompt
+                    }
                 ]
             }
         ]
@@ -299,70 +793,116 @@ SOURCES DISPONIBLES :
 
     request = urllib.request.Request(
         url,
-        data=json.dumps(payload).encode("utf-8"),
+        data=json.dumps(
+            payload
+        ).encode("utf-8"),
         headers={
-            "Content-Type": "application/json",
-            "x-goog-api-key": GEMINI_API_KEY
+            "Content-Type":
+                "application/json",
+            "x-goog-api-key":
+                GEMINI_API_KEY
         },
         method="POST"
     )
 
     try:
-        with urllib.request.urlopen(request, timeout=90) as response:
+
+        with urllib.request.urlopen(
+            request,
+            timeout=90
+        ) as response:
+
             result = json.loads(
-                response.read().decode("utf-8")
+                response.read().decode(
+                    "utf-8"
+                )
             )
 
     except urllib.error.HTTPError as e:
+
         error_body = e.read().decode(
             "utf-8",
             errors="replace"
         )
-        print("ERREUR GEMINI :", error_body)
+
+        print(
+            "ERREUR GEMINI :",
+            error_body
+        )
+
         raise
 
     try:
+
         return (
             result["candidates"][0]
             ["content"]["parts"][0]["text"]
         )
-    except (KeyError, IndexError, TypeError):
-        print("Réponse Gemini inattendue :", result)
+
+    except (
+        KeyError,
+        IndexError,
+        TypeError
+    ):
+
+        print(
+            "Réponse Gemini inattendue :",
+            result
+        )
+
         raise RuntimeError(
             "Réponse Gemini inutilisable."
         )
 
 
+# ============================================================
+# TELEGRAM — ENVOI
+# ============================================================
+
 def send_telegram(text):
+
     url = (
         f"https://api.telegram.org/bot"
         f"{TELEGRAM_BOT_TOKEN}/sendMessage"
     )
 
-    # Telegram limite les messages texte à 4096 caractères.
-    # On garde une marge de sécurité.
     max_length = 3900
 
     chunks = []
 
     while len(text) > max_length:
-        # Cherche une coupure propre
-        cut = text.rfind("\n", 0, max_length)
+
+        cut = text.rfind(
+            "\n",
+            0,
+            max_length
+        )
 
         if cut < 1000:
             cut = max_length
 
-        chunks.append(text[:cut])
-        text = text[cut:].lstrip()
+        chunks.append(
+            text[:cut]
+        )
+
+        text = text[
+            cut:
+        ].lstrip()
 
     if text:
         chunks.append(text)
 
-    for i, chunk in enumerate(chunks):
+    for i, chunk in enumerate(
+        chunks
+    ):
+
         data = urllib.parse.urlencode({
-            "chat_id": TELEGRAM_CHAT_ID,
-            "text": chunk,
-            "disable_web_page_preview": "false",
+            "chat_id":
+                TELEGRAM_CHAT_ID,
+            "text":
+                chunk,
+            "disable_web_page_preview":
+                "false",
         }).encode("utf-8")
 
         request = urllib.request.Request(
@@ -372,17 +912,21 @@ def send_telegram(text):
         )
 
         try:
+
             with urllib.request.urlopen(
                 request,
                 timeout=30
             ) as response:
-                result = response.read().decode("utf-8")
+
+                response.read()
 
             print(
-                f"Telegram: partie {i + 1}/{len(chunks)} envoyée."
+                f"Telegram : partie "
+                f"{i + 1}/{len(chunks)} envoyée."
             )
 
         except urllib.error.HTTPError as e:
+
             error_body = e.read().decode(
                 "utf-8",
                 errors="replace"
@@ -396,24 +940,51 @@ def send_telegram(text):
             raise
 
 
+# ============================================================
+# MAIN
+# ============================================================
+
 def main():
-    articles = get_articles()
+
+    articles = []
+
+    # RSS
+    articles.extend(
+        get_rss_articles()
+    )
+
+    # Telegram public
+    articles.extend(
+        get_telegram_articles()
+    )
+
+    # Bellingcat
+    articles.extend(
+        get_bellingcat_articles()
+    )
 
     if not articles:
+
         raise RuntimeError(
             "Aucune source exploitable trouvée."
         )
 
     print(
-        f"{len(articles)} éléments récupérés "
-        f"depuis les sources."
+        f"{len(articles)} éléments "
+        f"récupérés au total."
     )
 
-    briefing = ask_gemini(articles)
+    briefing = ask_gemini(
+        articles
+    )
 
-    send_telegram(briefing)
+    send_telegram(
+        briefing
+    )
 
-    print("Briefing V2 envoyé sur Telegram.")
+    print(
+        "Briefing V3 envoyé sur Telegram."
+    )
 
 
 if __name__ == "__main__":
