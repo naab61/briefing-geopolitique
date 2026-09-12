@@ -1,4 +1,4 @@
-<name: Briefing geopolitique
+name: Briefing geopolitique
 
 on:
   workflow_dispatch:
