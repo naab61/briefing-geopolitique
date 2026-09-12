@@ -39,7 +39,7 @@ def get_articles():
                     articles.append({
                         "title": unescape(title),
                         "link": link,
-                        "description": unescape(description)
+                        "description": unescape(description),
                         "date": item.findtext("pubDate", "")
                     })
 
