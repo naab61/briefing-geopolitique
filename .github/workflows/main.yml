@@ -2,6 +2,9 @@ name: Briefing geopolitique
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * *'
+      timezone: 'Europe/Paris'
 jobs:
   test:
     runs-on: ubuntu-latest
