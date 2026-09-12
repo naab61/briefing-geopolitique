@@ -18,6 +18,7 @@ def get_articles():
         headers={"User-Agent": "Mozilla/5.0"}
     )
 
+    request.add_header("User-Agent", "Mozilla/5.0 (compatible; BriefingGeopolitique/1.0)")
     with urllib.request.urlopen(request, timeout=30) as response:
         data = response.read()
 
