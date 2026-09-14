@@ -20,32 +20,26 @@ TELEGRAM_CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
 
 RSS_SOURCES = [
     {
-        "name": "OCCRP — investigations",
-        "type": "ENQUÊTE / OSINT",
-        "url": "https://www.occrp.org/en/investigations/feed",
+        "name": "AFP — dépêches",
+        "type": "AGENCE — BREAKING",
+        "url": "https://www.afp.com/fr/actus/afp_actualite/792%2C31%2C9%2C7%2C33/feed"
     },
     {
         "name": "International Crisis Group",
         "type": "ANALYSE / CONFLITS",
-        "url": "https://www.crisisgroup.org/rss",
-    },
-    {
-        "name": "France 24",
-        "type": "MÉDIA — RADAR",
-        "url": "https://www.france24.com/fr/rss",
+        "url": "https://www.crisisgroup.org/rss"
     },
     {
         "name": "RFI",
         "type": "MÉDIA — RADAR",
-        "url": "https://www.rfi.fr/fr/rss",
+        "url": "https://www.rfi.fr/fr/rss"
     },
     {
         "name": "Le Monde — international",
         "type": "MÉDIA — RADAR",
-        "url": "https://www.lemonde.fr/international/rss_full.xml",
-    },
+        "url": "https://www.lemonde.fr/international/rss_full.xml"
+    }
 ]
-
 
 TELEGRAM_CHANNELS = [
     {
