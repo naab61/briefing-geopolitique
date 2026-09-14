@@ -197,6 +197,8 @@ def get_rss_articles():
                         date = node.text.strip()
 
                 if title:
+                    if not is_recent(date):
+                        continue
                     articles.append({
                         "title": unescape(title),
                         "link": link,
