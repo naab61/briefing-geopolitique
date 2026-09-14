@@ -803,6 +803,9 @@ Français uniquement.
 
 Direct.
 
+Pour chaque information, indique l'heure de publication au format HH:MM lorsqu'elle est disponible.
+Ne jamais inventer une heure.
+
 Dense.
 
 Analytique.
