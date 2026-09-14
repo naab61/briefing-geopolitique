@@ -13,7 +13,7 @@ from email.utils import parsedate_to_datetime
 GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
 TELEGRAM_BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 TELEGRAM_CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
-
+MAX_AGE_HOURS = 36
 
 # ============================================================
 # SOURCES
