@@ -7,7 +7,8 @@ import urllib.error
 import xml.etree.ElementTree as ET
 from html import unescape
 from html.parser import HTMLParser
-
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 
 GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
 TELEGRAM_BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
