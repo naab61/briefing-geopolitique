@@ -984,6 +984,8 @@ def send_telegram(text):
                 TELEGRAM_CHAT_ID,
             "text":
                 chunk,
+            "parse_mode": "HTML",
+            
             "disable_web_page_preview":
                 "false",
         }).encode("utf-8")
