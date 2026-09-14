@@ -920,6 +920,28 @@ SOURCES FOURNIES
 # TELEGRAM — ENVOI
 # ============================================================
 
+def add_publication_hours(text, articles):
+    for article in articles:
+        date_text = article.get("date", "")
+        link = article.get("link", "")
+
+        if not date_text or not link:
+            continue
+
+        try:
+            dt = parsedate_to_datetime(date_text)
+            heure = dt.strftime("%H:%M")
+        except Exception:
+            continue
+
+        if link in text and f"🕒 {heure}" not in text:
+            text = text.replace(
+                link,
+                f"🕒 {heure}\n{link}"
+            )
+
+    return text
+
 def send_telegram(text):
 
     url = (
