@@ -1061,6 +1061,11 @@ def main():
         articles
     )
 
+    briefing = add_publication_hours(
+        briefing,
+        articles
+    )
+
     send_telegram(
         briefing
     )
