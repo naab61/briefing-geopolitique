@@ -63,6 +63,25 @@ BELLINGCAT_URL = "https://www.bellingcat.com/news/"
 # OUTILS
 # ============================================================
 
+def is_recent(date_text, max_hours=MAX_AGE_HOURS):
+    if not date_text:
+        return False
+
+    try:
+        dt = parsedate_to_datetime(date_text)
+
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+
+        age = (
+            datetime.now(timezone.utc) - dt
+        ).total_seconds() / 3600
+
+        return age <= max_hours
+
+    except Exception:
+        return False
+
 def clean_html(text):
     text = re.sub(r"<br\s*/?>", "\n", text, flags=re.I)
     text = re.sub(r"<[^>]+>", " ", text)
