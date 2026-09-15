@@ -1026,7 +1026,7 @@ def add_publication_hours(text, articles):
         date_text = article.get("date", "")
         link = article.get("link", "")
 
-        if not link:
+        if not date_text or not link:
             continue
 
         try:
@@ -1035,29 +1035,27 @@ def add_publication_hours(text, articles):
         except Exception:
             heure = ""
 
-        # Remplace directement l'URL fournie par Gemini
-        # par un lien Telegram cliquable affiché "Source".
-        safe_link = (
-            link.replace("&", "&amp;")
-                .replace('"', "&quot;")
-                .replace("<", "&lt;")
-                .replace(">", "&gt;")
-        )
+        # Remplace [Source 15], [Source 27], etc.
+        # par un lien Telegram propre.
+        import re
 
-        if link in text:
-            if heure:
-                replacement = (
-                    f"{heure}\n"
-                    f'<a href="{safe_link}">Source</a>'
-                )
-            else:
-                replacement = (
-                    f'<a href="{safe_link}">Source</a>'
-                )
+        pattern = r"\[Source(?:\s+\d+)?\]"
 
-            text = text.replace(link, replacement)
+        if re.search(pattern, text):
+            replacement = (
+                f"{heure}\n"
+                f'<a href="{link}">Source</a>'
+                if heure
+                else f'<a href="{link}">Source</a>'
+            )
 
-    text = text.replace("[Source]", "")
+            text = re.sub(
+                pattern,
+                replacement,
+                text,
+                count=1
+            )
+
     return text
     
 def send_telegram(text):
