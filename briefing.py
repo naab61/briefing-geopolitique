@@ -959,6 +959,7 @@ def add_publication_hours(text, articles):
 
             text = text.replace(link, replacement)
 
+    text = text.replace("[Source]", "")
     return text
     
 def send_telegram(text):
