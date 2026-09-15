@@ -548,19 +548,54 @@ def ask_gemini(articles):
     source_counts = {}
     theme_counts = {}
 
+    themes = {
+        "MOYEN-ORIENT": ["gaza", "israël", "iran", "syrie", "irak", "palestine"],
+        "YÉMEN": ["yémen", "houthis", "mer rouge"],
+        "UKRAINE-RUSSIE": ["ukraine", "russie", "poutine", "ukrainien"],
+        "USA-TRUMP": ["trump", "états-unis", "washington", "usa"],
+        "CHINE-INDOPACIFIQUE": ["chine", "taïwan", "pékin", "mer de chine"],
+        "EUROPE": ["europe", "ue", "otan", "france", "allemagne"],
+        "AFRIQUE": ["afrique", "sahel", "mali", "niger", "soudan"],
+        "MAGHREB-MAROC": ["maroc", "algérie", "tunisie", "maghreb"],
+        "OSINT-DÉSINFORMATION": ["désinformation", "propagande", "osint", "géolocalisation", "satellite"]
+    }
+
     for article in articles:
-        source_name = article.get("source", "")
+    source_name = article.get("source", "")
 
-        if source_counts.get(source_name, 0) >= 6:
-            continue
+    if source_counts.get(source_name, 0) >= 6:
+        continue
 
-        selected.append(article)
-        source_counts[source_name] = (
-            source_counts.get(source_name, 0) + 1
-        )
+    text = (
+        article.get("title", "") + " " +
+        article.get("description", "")
+    ).lower()
 
-        if len(selected) >= 55:
+    article_theme = "AUTRE"
+
+    for theme, keywords in themes.items():
+        if any(keyword in text for keyword in keywords):
+            article_theme = theme
             break
+
+    # Évite qu'un même thème prenne toute la place
+    if theme_counts.get(article_theme, 0) >= 8:
+        continue
+
+    selected.append(article)
+
+    source_counts[source_name] = (
+        source_counts.get(source_name, 0) + 1
+    )
+
+    theme_counts[article_theme] = (
+        theme_counts.get(article_theme, 0) + 1
+    )
+
+    article["theme"] = article_theme
+
+    if len(selected) >= 55:
+        break
 
     sources = []
 
