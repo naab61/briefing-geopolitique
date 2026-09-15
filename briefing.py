@@ -1022,39 +1022,52 @@ SOURCES FOURNIES
 # ============================================================
 
 def add_publication_hours(text, articles):
-    for article in articles:
-        date_text = article.get("date", "")
-        link = article.get("link", "")
+    import re
+    from html import escape
 
-        if not date_text or not link:
-            continue
+    def replace_sources(match):
+        numbers = re.findall(r"Source\s+(\d+)", match.group(0))
+        replacements = []
 
-        try:
-            dt = parsedate_to_datetime(date_text)
-            heure = dt.strftime("%H:%M")
-        except Exception:
-            heure = ""
+        for number in numbers:
+            index = int(number) - 1
 
-        # Remplace [Source 15], [Source 27], etc.
-        # par un lien Telegram propre.
-        import re
+            if index < 0 or index >= len(articles):
+                continue
 
-        pattern = r"\[Source(?:\s+\d+)?\]"
+            article = articles[index]
+            link = article.get("link", "")
+            date_text = article.get("date", "")
 
-        if re.search(pattern, text):
-            replacement = (
-                f"{heure}\n"
-                f'<a href="{link}">Source</a>'
-                if heure
-                else f'<a href="{link}">Source</a>'
-            )
+            if not link:
+                continue
 
-            text = re.sub(
-                pattern,
-                replacement,
-                text,
-                count=1
-            )
+            try:
+                dt = parsedate_to_datetime(date_text)
+                heure = dt.strftime("%H:%M")
+            except Exception:
+                heure = ""
+
+            safe_link = escape(link, quote=True)
+
+            if heure:
+                replacements.append(
+                    f'{heure} <a href="{safe_link}">Source</a>'
+                )
+            else:
+                replacements.append(
+                    f'<a href="{safe_link}">Source</a>'
+                )
+
+        return ", ".join(replacements)
+
+    # Traite aussi bien [Source 8] que
+    # [Source 8, Source 17] ou [Source 7, Source 8, Source 9]
+    text = re.sub(
+        r"\[Source\s+\d+(?:\s*,\s*Source\s+\d+)*\]",
+        replace_sources,
+        text
+    )
 
     return text
     
