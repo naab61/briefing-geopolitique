@@ -938,10 +938,10 @@ def add_publication_hours(text, articles):
             continue
 
         if link in text:
-    text = text.replace(
-        link,
-        f"{heure}\n<a href=\"{link}\">Source</a>"
-    )
+            text = text.replace(
+                link,
+                f"{heure}\n<a href=\"{link}\">Source</a>"
+            )
 
     return text
 
