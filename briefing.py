@@ -560,42 +560,79 @@ def ask_gemini(articles):
         "OSINT-DÉSINFORMATION": ["désinformation", "propagande", "osint", "géolocalisation", "satellite"]
     }
 
+    # Classe chaque article dans un thème
     for article in articles:
-    source_name = article.get("source", "")
+        text = (
+            article.get("title", "") + " " +
+            article.get("description", "")
+        ).lower()
 
-    if source_counts.get(source_name, 0) >= 6:
-        continue
+        article_theme = "AUTRE"
 
-    text = (
-        article.get("title", "") + " " +
-        article.get("description", "")
-    ).lower()
+        for theme, keywords in themes.items():
+            if any(keyword in text for keyword in keywords):
+                article_theme = theme
+                break
 
-    article_theme = "AUTRE"
+        article["theme"] = article_theme
 
-    for theme, keywords in themes.items():
-        if any(keyword in text for keyword in keywords):
-            article_theme = theme
+    # Première passe : garantir une représentation de chaque thème
+    for theme in themes:
+        for article in articles:
+            if article in selected:
+                continue
+
+            source_name = article.get("source", "")
+
+            if source_counts.get(source_name, 0) >= 6:
+                continue
+
+            if article.get("theme") != theme:
+                continue
+
+            if theme_counts.get(theme, 0) >= 4:
+                break
+
+            selected.append(article)
+
+            source_counts[source_name] = (
+                source_counts.get(source_name, 0) + 1
+            )
+
+            theme_counts[theme] = (
+                theme_counts.get(theme, 0) + 1
+            )
+
+            if len(selected) >= 55:
+                break
+
+        if len(selected) >= 55:
             break
 
-    # Évite qu'un même thème prenne toute la place
-    if theme_counts.get(article_theme, 0) >= 8:
-        continue
+    # Deuxième passe : compléter jusqu'à 55 articles
+    for article in articles:
+        if article in selected:
+            continue
 
-    selected.append(article)
+        source_name = article.get("source", "")
 
-    source_counts[source_name] = (
-        source_counts.get(source_name, 0) + 1
-    )
+        if source_counts.get(source_name, 0) >= 6:
+            continue
 
-    theme_counts[article_theme] = (
-        theme_counts.get(article_theme, 0) + 1
-    )
+        selected.append(article)
 
-    article["theme"] = article_theme
+        source_counts[source_name] = (
+            source_counts.get(source_name, 0) + 1
+        )
 
-    if len(selected) >= 55:
-        break
+        theme = article.get("theme", "AUTRE")
+
+        theme_counts[theme] = (
+            theme_counts.get(theme, 0) + 1
+        )
+
+        if len(selected) >= 55:
+            break
 
     sources = []
 
