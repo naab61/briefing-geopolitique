@@ -26,9 +26,54 @@ RSS_SOURCES = [
         "url": "https://www.afp.com/fr/actus/afp_actualite/792%2C31%2C9%2C7%2C33/feed"
     },
     {
+        "name": "Reuters — monde",
+        "type": "AGENCE — BREAKING",
+        "url": "https://www.reuters.com/rssFeed/worldNews"
+    },
+    {
+        "name": "BBC — World",
+        "type": "MÉDIA — INTERNATIONAL",
+        "url": "https://feeds.bbci.co.uk/news/world/rss.xml"
+    },
+    {
+        "name": "BBC — Middle East",
+        "type": "MÉDIA — MOYEN-ORIENT",
+        "url": "https://feeds.bbci.co.uk/news/world/middle_east/rss.xml"
+    },
+    {
+        "name": "BBC Arabic",
+        "type": "MÉDIA — ARABE",
+        "url": "https://feeds.bbci.co.uk/arabic/rss.xml"
+    },
+    {
+        "name": "Al Jazeera — English",
+        "type": "MÉDIA — INTERNATIONAL",
+        "url": "https://www.aljazeera.com/xml/rss/all.xml"
+    },
+    {
+        "name": "Al Jazeera — Arabic",
+        "type": "MÉDIA — ARABE / TERRAIN",
+        "url": "https://www.aljazeera.net/aljazeerarss/a7c186be-1baa-4bd4-9d80-a84db769f779/73d0e1b4-532f-45ef-b135-bfdff8b8cab9"
+    },
+    {
+        "name": "France 24 — arabe",
+        "type": "MÉDIA — ARABE",
+        "url": "https://www.france24.com/ar/rss"
+    },
+    {
+        "name": "Middle East Eye",
+        "type": "MÉDIA — MOYEN-ORIENT / TERRAIN",
+        "url": "https://www.middleeasteye.net/rss"
+    },
+    {
         "name": "International Crisis Group",
         "type": "ANALYSE / CONFLITS",
         "url": "https://www.crisisgroup.org/rss"
+    },
+    {
+        "name": "DW — World",
+        "type": "MÉDIA — EUROPE / INTERNATIONAL",
+        "url": "https://rss.dw.com/rdf/rss-en-world"
     },
     {
         "name": "RFI",
@@ -41,7 +86,6 @@ RSS_SOURCES = [
         "url": "https://www.lemonde.fr/international/rss_full.xml"
     }
 ]
-
 TELEGRAM_CHANNELS = [
     {
         "name": "Telegram — OSINTdefender",
