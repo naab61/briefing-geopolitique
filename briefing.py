@@ -532,7 +532,7 @@ def ask_gemini(articles):
         "RÉSEAUX SOCIAUX / GÉOLOCALISATION": 2,
         "RÉSEAUX SOCIAUX / OSINT": 2,
         "ANALYSE / CONFLITS": 3,
-        "MÉDIA — RADAR": 4,
+        "MÉDIA — RADAR": 6,
     }
 
     articles = sorted(
