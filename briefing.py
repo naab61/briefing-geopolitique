@@ -544,7 +544,22 @@ def ask_gemini(articles):
             )
     )
 
-    selected = articles[:55]
+    selected = []
+    source_counts = {}
+
+    for article in articles:
+        source_name = article.get("source", "")
+
+        if source_counts.get(source_name, 0) >= 6:
+            continue
+
+        selected.append(article)
+        source_counts[source_name] = (
+            source_counts.get(source_name, 0) + 1
+        )
+
+        if len(selected) >= 55:
+            break
 
     sources = []
 
