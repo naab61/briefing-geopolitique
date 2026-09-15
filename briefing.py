@@ -619,10 +619,9 @@ Le programme masquera automatiquement l'URL et la transformera en lien cliquable
 Si plusieurs sources indépendantes corroborent
 le même fait :
 
-Ne jamais afficher d'URL dans le texte final.
-Ne jamais afficher les emojis 🔎 ou 🔗.
-Ne jamais écrire "Source brute" ou "Corroboration".
-Les liens seront ajoutés automatiquement par le programme sous la forme "Source".
+Pour les corroborations, conserve également dans ta réponse les liens URL exacts fournis dans les SOURCES.
+N'ajoute aucun emoji 🔎 ou 🔗 et n'écris pas "Source brute" ou "Corroboration".
+Le programme masquera automatiquement ces URL et les transformera en liens cliquables affichés "Source".
 
 Utilise uniquement les URLs présentes
 dans les sources fournies.
