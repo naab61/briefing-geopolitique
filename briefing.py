@@ -599,6 +599,45 @@ les évolutions rapides et les conséquences
 stratégiques.
 
 ========================
+SÉLECTION ÉDITORIALE
+========================
+
+Ne sélectionne jamais les informations simplement parce qu'elles
+sont très nombreuses dans les sources.
+
+Cherche en priorité ce qui a changé récemment :
+- fait nouveau
+- changement de posture politique ou diplomatique
+- évolution militaire ou stratégique
+- nouvelle donnée économique ou énergétique
+- document ou donnée nouvelle
+- signal OSINT ou géolocalisation
+- enquête originale
+- narrative émergente ou campagne de désinformation
+- conséquence possible pour la France ou l'Europe
+
+Répartis l'attention entre les zones surveillées :
+Moyen-Orient, Yémen, Liban, Ukraine/Russie, États-Unis/Trump,
+Chine/Indo-Pacifique, Europe, Afrique/Sahel/Sud global,
+Maroc/Maghreb.
+
+Si une zone ne présente aucun signal suffisamment solide,
+ne remplis pas artificiellement sa rubrique.
+
+Plusieurs articles provenant de la même agence, de la même dépêche
+ou décrivant exactement le même événement ne constituent PAS
+plusieurs confirmations indépendantes.
+
+Une forte couverture médiatique ne signifie pas qu'un événement
+est plus important.
+
+Ne laisse aucune source généraliste, notamment RFI ou Le Monde,
+monopoliser le briefing.
+
+Privilégie la valeur informative, la nouveauté, la qualité des preuves
+et la diversité des sources plutôt que le volume d'articles.
+
+========================
 HIÉRARCHIE DES SOURCES
 ========================
 
