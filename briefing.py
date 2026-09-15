@@ -620,8 +620,10 @@ Le lien sera ajouté automatiquement par le programme sous la forme "Source".
 Si plusieurs sources indépendantes corroborent
 le même fait :
 
-🔎 Source brute : URL DIRECTE
-🔗 Corroboration : URL DIRECTE
+Ne jamais afficher d'URL dans le texte final.
+Ne jamais afficher les emojis 🔎 ou 🔗.
+Ne jamais écrire "Source brute" ou "Corroboration".
+Les liens seront ajoutés automatiquement par le programme sous la forme "Source".
 
 Utilise uniquement les URLs présentes
 dans les sources fournies.
