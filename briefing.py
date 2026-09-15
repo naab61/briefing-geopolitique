@@ -612,7 +612,10 @@ sur le lien et revenir à l'information brute.
 Pour chaque information importante,
 donne si possible :
 
-🔎 Source brute : URL DIRECTE
+Ne jamais afficher d'URL dans le texte final.
+Ne jamais afficher l'emoji 🔎.
+Ne jamais écrire "Source brute".
+Le lien sera ajouté automatiquement par le programme sous la forme "Source".
 
 Si plusieurs sources indépendantes corroborent
 le même fait :
