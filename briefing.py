@@ -546,6 +546,7 @@ def ask_gemini(articles):
 
     selected = []
     source_counts = {}
+    theme_counts = {}
 
     for article in articles:
         source_name = article.get("source", "")
