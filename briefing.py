@@ -937,24 +937,27 @@ def add_publication_hours(text, articles):
         except Exception:
             heure = ""
 
-        # Remplace les marqueurs [Source] générés par Gemini
-        # par un vrai lien Telegram HTML.
-        if "[Source]" in text:
+        # Remplace directement l'URL fournie par Gemini
+        # par un lien Telegram cliquable affiché "Source".
+        safe_link = (
+            link.replace("&", "&amp;")
+                .replace('"', "&quot;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+        )
+
+        if link in text:
             if heure:
                 replacement = (
                     f"{heure}\n"
-                    f"<a href=\"{link}\">Source</a>"
+                    f'<a href="{safe_link}">Source</a>'
                 )
             else:
                 replacement = (
-                    f"<a href=\"{link}\">Source</a>"
+                    f'<a href="{safe_link}">Source</a>'
                 )
 
-            text = text.replace(
-                "[Source]",
-                replacement,
-                1
-            )
+            text = text.replace(link, replacement)
 
     return text
     
