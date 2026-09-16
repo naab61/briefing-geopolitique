@@ -57,7 +57,14 @@ def is_recent(date_text, max_hours=MAX_AGE_HOURS):
         return False
 
     try:
-        dt = parsedate_to_datetime(date_text)
+        text = date_text.strip()
+
+        try:
+            dt = datetime.fromisoformat(
+                text.replace("Z", "+00:00")
+            )
+        except ValueError:
+            dt = parsedate_to_datetime(text)
 
         if dt.tzinfo is None:
             dt = dt.replace(tzinfo=timezone.utc)
@@ -66,7 +73,7 @@ def is_recent(date_text, max_hours=MAX_AGE_HOURS):
             datetime.now(timezone.utc) - dt
         ).total_seconds() / 3600
 
-        return age <= max_hours
+        return 0 <= age <= max_hours
 
     except Exception:
         return False
@@ -460,10 +467,7 @@ def get_bellingcat_articles():
 
             seen.add(link)
 
-                if not link or not is_recent(post.get("date", "")):
-                    continue
-
-                articles.append({
+            articles.append({
                 "title": title,
                 "link": link,
                 "description":
