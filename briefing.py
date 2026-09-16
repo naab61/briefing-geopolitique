@@ -224,8 +224,11 @@ class TelegramPostParser(HTMLParser):
         super().__init__()
 
         self.in_post = False
+        self.post_depth = 0
+        self.in_text = False
         self.current_text = []
         self.current_post_id = None
+        self.current_date = ""
 
         self.posts = []
 
@@ -244,11 +247,17 @@ class TelegramPostParser(HTMLParser):
             in classes
         ):
             self.in_post = True
+            self.post_depth = 1
+            self.in_text = False
             self.current_text = []
 
             self.current_post_id = attrs.get(
                 "data-post"
             )
+            self.current_date = ""
+
+        elif self.in_post and tag == "div":
+            self.post_depth += 1
 
         # Texte du message
         if (
@@ -256,11 +265,17 @@ class TelegramPostParser(HTMLParser):
             and "tgme_widget_message_text"
             in classes
         ):
+            self.in_text = True
             self.current_text = []
+
+        if self.in_post and tag == "time":
+            value = attrs.get("datetime", "")
+            if value:
+                self.current_date = value.strip()
 
     def handle_data(self, data):
 
-        if self.in_post:
+        if self.in_post and self.in_text:
             data = data.strip()
 
             if data:
@@ -268,7 +283,11 @@ class TelegramPostParser(HTMLParser):
 
     def handle_endtag(self, tag):
 
-        if tag == "div" and self.in_post:
+        if self.in_post and tag == "div":
+            self.post_depth -= 1
+
+            if self.post_depth > 0:
+                return
 
             text = " ".join(
                 self.current_text
@@ -281,11 +300,16 @@ class TelegramPostParser(HTMLParser):
                 self.posts.append({
                     "text": text,
                     "post_id":
-                        self.current_post_id
+                        self.current_post_id,
+                    "date": self.current_date,
                 })
 
             self.in_post = False
+            self.post_depth = 0
+            self.in_text = False
             self.current_text = []
+            self.current_post_id = None
+            self.current_date = ""
 
 
 def get_telegram_articles():
@@ -345,7 +369,7 @@ def get_telegram_articles():
                     "link": link,
                     "description":
                         post["text"],
-                    "date": "",
+                    "date": post.get("date", ""),
                     "source":
                         channel["name"],
                     "type":
