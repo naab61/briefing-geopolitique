@@ -747,19 +747,17 @@ Quand tu cites une information factuelle,
 utilise DIRECTEMENT le lien correspondant
 à la source qui contient cette information.
 
-NE JAMAIS écrire :
+Pour chaque information factuelle, indique
+le numéro de la source correspondante sous
+la forme [Source N].
 
-[Source 1]
-[Source 40]
-[Source 7]
-[source##]
-SOURCE 12
+Cette notation est INTERNE au programme :
+elle sera automatiquement remplacée par
+un lien cliquable avant l'envoi Telegram.
 
-NE JAMAIS utiliser une numérotation interne
-des sources.
-
+NE JAMAIS laisser [Source N] dans le texte final.
 Le lecteur doit pouvoir cliquer directement
-sur le lien et revenir à l'information brute.
+sur le lien exact de la source.
 
 Pour chaque information importante,
 donne si possible :
@@ -1115,8 +1113,8 @@ def add_publication_hours(text, articles):
 
         return ", ".join(replacements)
 
-    # Traite aussi bien [Source 8] que
-    # [Source 8, Source 17] ou [Source 7, Source 8, Source 9]
+# Traite [Source 8] ainsi que les listes
+# [Source 8, Source 17] ou [Source 7, Source 8, Source 9]
     text = re.sub(
         r"\[Source\s+\d+(?:\s*,\s*Source\s+\d+)*\]",
         replace_sources,
