@@ -347,7 +347,12 @@ def get_telegram_articles():
             parser = TelegramPostParser()
             parser.feed(html)
 
-            posts = parser.posts[-15:]
+            # Le flux public Telegram peut afficher plusieurs pages anciennes.
+            # On ne conserve que les publications réellement récentes.
+            posts = [
+                post for post in parser.posts
+                if is_recent(post.get("date", ""))
+            ][-15:]
 
             for post in posts:
 
@@ -455,7 +460,10 @@ def get_bellingcat_articles():
 
             seen.add(link)
 
-            articles.append({
+                if not link or not is_recent(post.get("date", "")):
+                    continue
+
+                articles.append({
                 "title": title,
                 "link": link,
                 "description":
@@ -1203,11 +1211,6 @@ def send_telegram(text):
 def main():
 
     articles = []
-
-    # RSS
-    articles.extend(
-        get_rss_articles()
-    )
 
     # Telegram public
     articles.extend(
