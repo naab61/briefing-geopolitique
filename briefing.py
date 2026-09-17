@@ -462,6 +462,26 @@ def get_bellingcat_articles():
             ):
                 continue
 
+            match_date = re.search(
+                r"/((?:20)\d{2})/(\d{2})/(\d{2})/",
+                link
+            )
+
+            if not match_date:
+                continue
+
+            date_text = (
+                f"{match_date.group(1)}-"
+                f"{match_date.group(2)}-"
+                f"{match_date.group(3)}T00:00:00+00:00"
+            )
+
+            if not is_recent(
+                date_text,
+                max_hours=24 * 7
+            ):
+                continue
+
             if link in seen:
                 continue
 
@@ -473,7 +493,7 @@ def get_bellingcat_articles():
                 "description":
                     "Investigation Bellingcat "
                     "issue de sources ouvertes.",
-                "date": "",
+                "date": date_text,
                 "source":
                     "Bellingcat",
                 "type":
@@ -621,6 +641,7 @@ def ask_gemini(articles):
         selected,
         start=1
     ):
+        article["_source_number"] = i
 
         sources.append(
             f"""
@@ -1082,12 +1103,18 @@ def add_publication_hours(text, articles):
         replacements = []
 
         for number in numbers:
-            index = int(number) - 1
+            source_number = int(number)
 
-            if index < 0 or index >= len(articles):
+            article = next(
+                (
+                    item for item in articles
+                    if item.get("_source_number") == source_number
+                ),
+                None
+            )
+
+            if article is None:
                 continue
-
-            article = articles[index]
             link = article.get("link", "")
             date_text = article.get("date", "")
 
