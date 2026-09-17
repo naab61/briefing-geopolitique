@@ -1054,10 +1054,12 @@ SOURCES FOURNIES
 
     try:
 
-        return (
+        text = (
             result["candidates"][0]
             ["content"]["parts"][0]["text"]
         )
+
+        return text.strip()
 
     except (
         KeyError,
@@ -1073,6 +1075,70 @@ SOURCES FOURNIES
         raise RuntimeError(
             "Réponse Gemini inutilisable."
         )
+
+
+# ============================================================
+# SOURCES CLÉS — GÉNÉRATION AUTOMATIQUE
+# ============================================================
+
+def add_key_sources(text, articles, limit=12):
+    from html import escape
+
+    key_articles = [
+        article
+        for article in articles
+        if article.get("_source_number")
+        and article.get("link")
+    ][:limit]
+
+    if not key_articles:
+        return text
+
+    lines = [
+        "🔎 SOURCES CLÉS",
+        "",
+    ]
+
+    for article in key_articles:
+        number = article["_source_number"]
+        title = clean_text(
+            article.get("title", ""),
+            180
+        )
+        link = escape(
+            article.get("link", ""),
+            quote=True
+        )
+
+        date_text = article.get("date", "")
+        heure = ""
+
+        try:
+            try:
+                dt = datetime.fromisoformat(
+                    date_text.replace("Z", "+00:00")
+                )
+            except ValueError:
+                dt = parsedate_to_datetime(date_text)
+
+            heure = dt.strftime("%H:%M")
+        except Exception:
+            pass
+
+        prefix = f"- Source {number}"
+        if heure:
+            prefix += f" {heure}"
+
+        if title:
+            lines.append(
+                f'{prefix} : <a href="{link}">{escape(title)}</a>'
+            )
+        else:
+            lines.append(
+                f'{prefix} : <a href="{link}">Source</a>'
+            )
+
+    return text.rstrip() + "\n\n" + "\n".join(lines)
 
 
 # ============================================================
@@ -1183,6 +1249,15 @@ def send_telegram(text):
     if text:
         chunks.append(text)
 
+    # Telegram HTML n'accepte qu'un nombre limité de balises.
+    # Gemini peut parfois produire des pseudo-balises comme <bos>.
+    # On les neutralise avant l'envoi tout en conservant nos liens <a>.
+    text = re.sub(
+        r"</?(?!a\b|/a\b)[a-zA-Z][^>]*>",
+        "",
+        text
+    )
+
     for i, chunk in enumerate(
         chunks
     ):
@@ -1267,6 +1342,11 @@ def main():
     )
 
     briefing = add_publication_hours(
+        briefing,
+        articles
+    )
+
+    briefing = add_key_sources(
         briefing,
         articles
     )
