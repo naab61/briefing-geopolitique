@@ -765,34 +765,19 @@ Les informations fournies après
 "SOURCES FOURNIES" contiennent des LIENS.
 
 Quand tu cites une information factuelle,
-utilise DIRECTEMENT le lien correspondant
-à la source qui contient cette information.
+appuie-toi sur les sources fournies.
 
-Pour chaque information factuelle, indique
-le numéro de la source correspondante sous
-la forme [Source N].
+IMPORTANT : NE GÉNÈRE AUCUNE SECTION
+"SOURCES CLÉS" et NE GÉNÈRE AUCUN
+marqueur du type [Source N], [Source],
+Source 1, Sourcel ou équivalent.
 
-Cette notation est INTERNE au programme :
-elle sera automatiquement remplacée par
-un lien cliquable avant l'envoi Telegram.
+Le programme construit automatiquement
+la section "🔎 SOURCES CLÉS" à partir
+des liens exacts des sources fournies.
 
-NE JAMAIS laisser [Source N] dans le texte final.
-Le lecteur doit pouvoir cliquer directement
-sur le lien exact de la source.
-
-Pour chaque information importante,
-donne si possible :
-
-Conserve dans ta réponse le lien URL exact fourni dans les SOURCES.
-N'ajoute aucun emoji 🔎 ou 🔗 et n'écris pas "Source brute".
-Le programme masquera automatiquement l'URL et la transformera en lien cliquable affiché "Source".
-
-Si plusieurs sources indépendantes corroborent
-le même fait :
-
-Pour les corroborations, conserve également dans ta réponse les liens URL exacts fournis dans les SOURCES.
-N'ajoute aucun emoji 🔎 ou 🔗 et n'écris pas "Source brute" ou "Corroboration".
-Le programme masquera automatiquement ces URL et les transformera en liens cliquables affichés "Source".
+Ne fabrique donc aucun lien et ne tente
+pas de reproduire les URLs dans ta réponse.
 
 Utilise uniquement les URLs présentes
 dans les sources fournies.
