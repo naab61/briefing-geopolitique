@@ -1098,54 +1098,69 @@ def add_publication_hours(text, articles):
     import re
     from html import escape
 
-    def replace_sources(match):
+    def source_link(source_number):
+        article = next(
+            (
+                item for item in articles
+                if item.get("_source_number") == source_number
+            ),
+            None
+        )
+
+        if article is None:
+            return None
+
+        link = article.get("link", "")
+        date_text = article.get("date", "")
+
+        if not link:
+            return None
+
+        try:
+            try:
+                dt = datetime.fromisoformat(
+                    date_text.replace("Z", "+00:00")
+                )
+            except ValueError:
+                dt = parsedate_to_datetime(date_text)
+            heure = dt.strftime("%H:%M")
+        except Exception:
+            heure = ""
+
+        safe_link = escape(link, quote=True)
+
+        if heure:
+            return f'{heure} <a href="{safe_link}">Source</a>'
+
+        return f'<a href="{safe_link}">Source</a>'
+
+    def replace_source_list(match):
         numbers = re.findall(r"Source\s+(\d+)", match.group(0))
-        replacements = []
+        links = []
 
         for number in numbers:
-            source_number = int(number)
+            link = source_link(int(number))
+            if link:
+                links.append(link)
 
-            article = next(
-                (
-                    item for item in articles
-                    if item.get("_source_number") == source_number
-                ),
-                None
-            )
+        return ", ".join(links)
 
-            if article is None:
-                continue
-            link = article.get("link", "")
-            date_text = article.get("date", "")
-
-            if not link:
-                continue
-
-            try:
-                dt = parsedate_to_datetime(date_text)
-                heure = dt.strftime("%H:%M")
-            except Exception:
-                heure = ""
-
-            safe_link = escape(link, quote=True)
-
-            if heure:
-                replacements.append(
-                    f'{heure} <a href="{safe_link}">Source</a>'
-                )
-            else:
-                replacements.append(
-                    f'<a href="{safe_link}">Source</a>'
-                )
-
-        return ", ".join(replacements)
-
-# Traite [Source 8] ainsi que les listes
-# [Source 8, Source 17] ou [Source 7, Source 8, Source 9]
     text = re.sub(
         r"\[Source\s+\d+(?:\s*,\s*Source\s+\d+)*\]",
-        replace_sources,
-        text
+        replace_source_list,
+        text,
+        flags=re.IGNORECASE
+    )
+
+    def replace_bare_source(match):
+        link = source_link(int(match.group(1)))
+        return link if link else match.group(0)
+
+    text = re.sub(
+        r"(?<![\w>])Source\s+(\d+)(?!\d)",
+        replace_bare_source,
+        text,
+        flags=re.IGNORECASE
     )
 
     return text
