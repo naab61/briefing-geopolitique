@@ -1084,6 +1084,46 @@ SOURCES FOURNIES
 def add_key_sources(text, articles, limit=12):
     from html import escape
 
+    # Gemini peut malgré les consignes produire sa propre rubrique
+    # « SOURCES CLÉS ». On la supprime systématiquement avant
+    # d'ajouter notre rubrique construite à partir des vrais liens.
+    text = re.sub(
+        r"(?is)(?:^|\n)\s*[^\n]*SOURCES? CL[ÉE]S[^\n]*\n.*$",
+        "",
+        text,
+        count=1
+    ).strip()
+
+    # Supprime les URLs que Gemini pourrait encore recopier dans le corps.
+    text = re.sub(
+        r"\[[^\]]*\]\(https?://[^)]+\)",
+        "",
+        text
+    )
+    text = re.sub(
+        r"https?://[^\s<>\])]+",
+        "",
+        text
+    )
+
+    # Supprime quelques fragments de liens Twitter/X ou de slugs isolés.
+    text = re.sub(
+        r"(?im)^\s*[-•]?\s*/(?:status|photo)/\d+\s*$",
+        "",
+        text
+    )
+    text = re.sub(
+        r"(?im)^\s*[-•]?\s*(?:[a-z0-9]+-){3,}[a-z0-9]+/?\s*$",
+        "",
+        text
+    )
+
+    text = re.sub(
+        r"\n{3,}",
+        "\n\n",
+        text
+    ).strip()
+
     key_articles = [
         article
         for article in articles
@@ -1218,6 +1258,15 @@ def add_publication_hours(text, articles):
     
 def send_telegram(text):
 
+    # Telegram HTML n'accepte qu'un nombre limité de balises.
+    # Gemini peut produire des pseudo-balises comme <bos>.
+    # On les neutralise AVANT de découper le message.
+    text = re.sub(
+        r"</?(?!a\b|/a\b)[a-zA-Z][^>]*>",
+        "",
+        text
+    )
+
     url = (
         f"https://api.telegram.org/bot"
         f"{TELEGRAM_BOT_TOKEN}/sendMessage"
@@ -1248,15 +1297,6 @@ def send_telegram(text):
 
     if text:
         chunks.append(text)
-
-    # Telegram HTML n'accepte qu'un nombre limité de balises.
-    # Gemini peut parfois produire des pseudo-balises comme <bos>.
-    # On les neutralise avant l'envoi tout en conservant nos liens <a>.
-    text = re.sub(
-        r"</?(?!a\b|/a\b)[a-zA-Z][^>]*>",
-        "",
-        text
-    )
 
     for i, chunk in enumerate(
         chunks
