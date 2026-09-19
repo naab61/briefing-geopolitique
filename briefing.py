@@ -1340,7 +1340,7 @@ def send_telegram(text):
             "parse_mode": "HTML",
             
             "disable_web_page_preview":
-                "false",
+                "true",
         }).encode("utf-8")
 
         request = urllib.request.Request(
