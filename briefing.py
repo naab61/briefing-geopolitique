@@ -781,12 +781,12 @@ IMPORTANT : NE GÉNÈRE AUCUNE SECTION
 marqueur du type [Source N], [Source],
 Source 1, Sourcel ou équivalent.
 
-Le programme construit automatiquement
-la section "🔎 SOURCES CLÉS" à partir
-des liens exacts des sources fournies.
+Ne fabrique aucun lien et ne reproduis
+aucune URL dans ta réponse.
 
-Ne fabrique donc aucun lien et ne tente
-pas de reproduire les URLs dans ta réponse.
+Les liens directs seront ajoutés
+automatiquement par le programme
+à l'information correspondante.
 
 Utilise uniquement les URLs présentes
 dans les sources fournies.
