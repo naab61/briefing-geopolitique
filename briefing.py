@@ -1236,7 +1236,7 @@ def add_publication_hours(text, articles):
     import re
     from html import escape
 
-        def source_link(source_number):
+    def source_link(source_number):
         article = next(
             (
                 item for item in articles
