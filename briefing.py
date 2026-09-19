@@ -1018,7 +1018,6 @@ Utilise uniquement les URLs fournies.
 N'invente jamais d'URL.
 
 ========================
-========================
 CLASSIFICATION
 ========================
 
