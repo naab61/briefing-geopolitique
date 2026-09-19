@@ -1381,11 +1381,6 @@ def main():
         articles
     )
 
-    briefing = add_publication_hours(
-        briefing,
-        articles
-    )
-
     briefing = add_key_sources(
         briefing,
         articles
