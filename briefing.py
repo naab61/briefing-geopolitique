@@ -1521,7 +1521,7 @@ def main():
 
     send_telegram(
         briefing
-    
+    )
 
     print(
         "Briefing V3 envoyé sur Telegram."
