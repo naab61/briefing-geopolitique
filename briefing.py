@@ -911,37 +911,113 @@ Surveille particulièrement :
 🌍 Sud global
 
 ========================
-FORMAT
+STRUCTURE OBLIGATOIRE
 ========================
 
-🌍 GRANDES TENDANCES
+🔴 FAITS DU JOUR
 
-🟠 MOYEN-ORIENT
+Classe les faits du plus récent au plus ancien
+selon leur date et heure de publication lorsqu'elles
+sont disponibles.
 
-🔴 UKRAINE / RUSSIE
+Chaque fait doit être clairement séparé.
 
-🇺🇸 ÉTATS-UNIS
+Ne répète pas plusieurs fois le même événement.
 
-🇨🇳 CHINE / INDO-PACIFIQUE
+========================
 
-🇪🇺 EUROPE
+🟡 SIGNAUX À CONFIRMER
 
-🌍 AFRIQUE / SUD GLOBAL
+Présente uniquement les informations
+non suffisamment corroborées.
 
-🇲🇦 MAROC / MAGHREB
+Indique ce qui est affirmé, qui le diffuse
+et les éléments disponibles pour ou contre.
 
-📱 RÉSEAUX SOCIAUX / OSINT
+========================
 
-🧠 NARRATIVES ET DÉSINFORMATION
+🔵 ANALYSE
 
-🇫🇷 CONSÉQUENCES POUR LA FRANCE ET L'EUROPE
+Explique ce que les faits permettent
+de comprendre.
 
-🔭 SCÉNARIOS 24–72H
+Ne répète pas les faits déjà présentés.
 
-📅 SCÉNARIOS À 7 JOURS
+========================
 
-🔎 SOURCES CLÉS
+🟣 NARRATIVES EN CIRCULATION
 
+Présente uniquement les narratives
+réellement significatives.
+
+Indique clairement le camp, la communauté
+ou l'acteur auquel elles sont associées.
+
+Une narrative n'est jamais présentée
+comme un fait établi.
+
+========================
+
+🔭 CE QUI PEUT CHANGER ENSUITE
+
+24–72 h
+
+Présente uniquement les évolutions concrètes
+et plausibles à surveiller dans les prochaines
+24 à 72 heures.
+
+7 jours
+
+Présente uniquement les évolutions susceptibles
+de devenir importantes dans les sept prochains jours.
+
+Ne répète pas les informations déjà présentées.
+
+========================
+
+👁️ À SURVEILLER
+
+Liste uniquement les indicateurs ou événements
+dont l'évolution mérite une surveillance particulière.
+
+========================
+
+RÈGLE DE NON-RÉPÉTITION
+
+Une même information ne doit apparaître qu'une seule fois.
+
+Ne reformule pas le même événement dans plusieurs sections.
+
+========================
+
+RÈGLE SUR LA VEILLE
+
+Ne reprends jamais un sujet ou une information
+déjà présents dans le briefing précédent.
+
+Un sujet ancien ne peut réapparaître que si un
+développement réellement nouveau est apparu depuis.
+
+Dans ce cas, présente uniquement le nouveau
+développement et ce qu'il change.
+
+========================
+
+SOURCES ET LIENS
+
+Ne génère aucune section « SOURCES CLÉS ».
+
+Ne génère aucun bloc récapitulatif de sources
+à la fin du briefing.
+
+Le lien direct doit être placé avec l'information
+à laquelle il correspond.
+
+Utilise uniquement les URLs fournies.
+
+N'invente jamais d'URL.
+
+========================
 ========================
 CLASSIFICATION
 ========================
