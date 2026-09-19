@@ -1084,46 +1084,54 @@ SOURCES FOURNIES
 def add_key_sources(text, articles, limit=12):
     from html import escape
 
-    # Gemini peut malgré les consignes produire sa propre rubrique
-    # « SOURCES CLÉS ». On la supprime systématiquement avant
-    # d'ajouter notre rubrique construite à partir des vrais liens.
-    text = re.sub(
-        r"(?is)(?:^|\n)\s*[^\n]*SOURCES? CL[ÉE]S[^\n]*\n.*$",
-        "",
-        text,
-        count=1
-    ).strip()
+    # Gemini peut générer sa propre rubrique de sources.
+    # On coupe TOUT à partir de cette rubrique, quelle que soit
+    # la présence ou non de l'accent dans "CLÉS".
+    match = re.search(
+        r"(?im)^\s*(?:🔎\s*)?SOURCES?\s+CL[ÉE]S?\s*:?\s*$",
+        text
+    )
 
-    # Supprime les URLs que Gemini pourrait encore recopier dans le corps.
+    if match:
+        text = text[:match.start()].rstrip()
+
+    # Supprime les éventuels liens Markdown ou URLs que Gemini
+    # aurait placés dans le corps du briefing.
     text = re.sub(
         r"\[[^\]]*\]\(https?://[^)]+\)",
         "",
         text
     )
+
     text = re.sub(
         r"https?://[^\s<>\])]+",
         "",
         text
     )
 
-    # Supprime quelques fragments de liens Twitter/X ou de slugs isolés.
+    # Supprime les fragments isolés de liens X/Twitter.
     text = re.sub(
         r"(?im)^\s*[-•]?\s*/(?:status|photo)/\d+\s*$",
         "",
         text
     )
+
+    # Supprime les slugs de liens isolés.
     text = re.sub(
         r"(?im)^\s*[-•]?\s*(?:[a-z0-9]+-){3,}[a-z0-9]+/?\s*$",
         "",
         text
     )
 
+    # Nettoyage des espaces/lignes vides.
     text = re.sub(
         r"\n{3,}",
         "\n\n",
         text
     ).strip()
 
+    # Construit la vraie rubrique SOURCES CLÉS uniquement
+    # à partir des articles réellement récupérés par le script.
     key_articles = [
         article
         for article in articles
@@ -1141,10 +1149,12 @@ def add_key_sources(text, articles, limit=12):
 
     for article in key_articles:
         number = article["_source_number"]
+
         title = clean_text(
             article.get("title", ""),
             180
         )
+
         link = escape(
             article.get("link", ""),
             quote=True
@@ -1166,6 +1176,7 @@ def add_key_sources(text, articles, limit=12):
             pass
 
         prefix = f"- Source {number}"
+
         if heure:
             prefix += f" {heure}"
 
@@ -1179,7 +1190,6 @@ def add_key_sources(text, articles, limit=12):
             )
 
     return text.rstrip() + "\n\n" + "\n".join(lines)
-
 
 # ============================================================
 # TELEGRAM — ENVOI
