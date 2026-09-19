@@ -1085,15 +1085,16 @@ def add_key_sources(text, articles, limit=12):
     from html import escape
 
     # Gemini peut générer sa propre rubrique de sources.
-    # On coupe TOUT à partir de cette rubrique, quelle que soit
-    # la présence ou non de l'accent dans "CLÉS".
-    match = re.search(
-        r"(?im)^\s*(?:🔎\s*)?SOURCES?\s+CL[ÉE]S?\s*:?\s*$",
-        text
+    # On supprime absolument tout ce qui suit la première
+    # occurrence de "SOURCES CLÉS", même si Gemini ajoute
+    # des espaces, caractères invisibles ou du texte sur la même ligne.
+    parts = re.split(
+        r"(?i)SOURCES?\s+CL[ÉE]S",
+        text,
+        maxsplit=1
     )
 
-    if match:
-        text = text[:match.start()].rstrip()
+    text = parts[0].rstrip()
 
     # Supprime les éventuels liens Markdown ou URLs que Gemini
     # aurait placés dans le corps du briefing.
