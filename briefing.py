@@ -1183,17 +1183,20 @@ def add_key_sources(text, articles, limit=12):
         date_text = article.get("date", "")
         heure = ""
 
-        try:
+        # N'affiche l'heure que si la source fournit réellement
+        # une heure de publication.
+        if "T" in date_text or " " in date_text:
             try:
-                dt = datetime.fromisoformat(
-                    date_text.replace("Z", "+00:00")
-                )
-            except ValueError:
-                dt = parsedate_to_datetime(date_text)
+                try:
+                    dt = datetime.fromisoformat(
+                        date_text.replace("Z", "+00:00")
+                    )
+                except ValueError:
+                    dt = parsedate_to_datetime(date_text)
 
-            heure = dt.strftime("%H:%M")
-        except Exception:
-            pass
+                heure = dt.strftime("%H:%M")
+            except Exception:
+                pass
 
         prefix = f"- Source {number}"
 
