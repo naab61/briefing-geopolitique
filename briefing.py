@@ -1519,14 +1519,9 @@ def main():
         articles
     )
 
-    briefing = add_key_sources(
-        briefing,
-        articles
-    )
-
     send_telegram(
         briefing
-    )
+    
 
     print(
         "Briefing V3 envoyé sur Telegram."
