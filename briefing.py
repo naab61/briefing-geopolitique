@@ -538,11 +538,11 @@ def ask_gemini(articles):
 
     articles = sorted(
         articles,
-        key=lambda x:
+        key=lambda x: (
             priority.get(
                 x.get("type", ""),
                 5
-            )
+            ),
             x.get("date", "")
         ),
         reverse=False
