@@ -1236,7 +1236,7 @@ def add_publication_hours(text, articles):
     import re
     from html import escape
 
-    def source_link(source_number):
+        def source_link(source_number):
         article = next(
             (
                 item for item in articles
@@ -1254,18 +1254,34 @@ def add_publication_hours(text, articles):
         if not link:
             return None
 
-        try:
-            try:
-                dt = datetime.fromisoformat(
-                    date_text.replace("Z", "+00:00")
-                )
-            except ValueError:
-                dt = parsedate_to_datetime(date_text)
-            heure = dt.strftime("%H:%M")
-        except Exception:
-            heure = ""
+        heure = ""
 
-        safe_link = escape(link, quote=True)
+        if "T" in date_text or re.search(
+            r"\d{2}:\d{2}",
+            date_text
+        ):
+            try:
+                try:
+                    dt = datetime.fromisoformat(
+                        date_text.replace(
+                            "Z",
+                            "+00:00"
+                        )
+                    )
+                except ValueError:
+                    dt = parsedate_to_datetime(
+                        date_text
+                    )
+
+                heure = dt.strftime("%H:%M")
+
+            except Exception:
+                heure = ""
+
+        safe_link = escape(
+            link,
+            quote=True
+        )
 
         if heure:
             return f'{heure} <a href="{safe_link}">Source</a>'
