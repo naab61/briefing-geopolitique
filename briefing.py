@@ -473,7 +473,7 @@ def get_bellingcat_articles():
             date_text = (
                 f"{match_date.group(1)}-"
                 f"{match_date.group(2)}-"
-                f"{match_date.group(3)}T00:00:00+00:00"
+                f"{match_date.group(3)}"
             )
 
             if not is_recent(
@@ -1180,23 +1180,23 @@ def add_key_sources(text, articles, limit=12):
             quote=True
         )
 
-        date_text = article.get("date", "")
-        heure = ""
+date_text = article.get("date", "")
+heure = ""
 
-        # N'affiche l'heure que si la source fournit réellement
-        # une heure de publication.
-        if "T" in date_text or " " in date_text:
-            try:
-                try:
-                    dt = datetime.fromisoformat(
-                        date_text.replace("Z", "+00:00")
-                    )
-                except ValueError:
-                    dt = parsedate_to_datetime(date_text)
+# Une heure n'est affichée que si elle est réellement fournie
+# par la source. Bellingcat fournit ici uniquement une date.
+if "T" in date_text or re.search(r"\d{2}:\d{2}", date_text):
+    try:
+        try:
+            dt = datetime.fromisoformat(
+                date_text.replace("Z", "+00:00")
+            )
+        except ValueError:
+            dt = parsedate_to_datetime(date_text)
 
-                heure = dt.strftime("%H:%M")
-            except Exception:
-                pass
+        heure = dt.strftime("%H:%M")
+    except Exception:
+        pass
 
         prefix = f"- Source {number}"
 
