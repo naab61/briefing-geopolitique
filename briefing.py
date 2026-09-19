@@ -1083,6 +1083,25 @@ SOURCES FOURNIES
 
 def add_key_sources(text, articles, limit=12):
     from html import escape
+    # Supprime les blocs de sources que Gemini peut générer lui-même.
+    cut_positions = []
+
+    match = re.search(
+        r"(?is)SOURCES?\s+CL[ÉE]S",
+        text
+    )
+    if match:
+        cut_positions.append(match.start())
+
+    match = re.search(
+        r"(?im)^\s*[-•]?\s*Source\s+\d+(?:\s|:)",
+        text
+    )
+    if match:
+        cut_positions.append(match.start())
+
+    if cut_positions:
+        text = text[:min(cut_positions)].rstrip()
 
     # Gemini peut générer sa propre rubrique de sources.
     # On supprime absolument tout ce qui suit la première
