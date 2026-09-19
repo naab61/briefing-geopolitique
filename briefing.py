@@ -543,6 +543,9 @@ def ask_gemini(articles):
                 x.get("type", ""),
                 5
             )
+            x.get("date", "")
+        ),
+        reverse=False
     )
 
     selected = []
@@ -635,6 +638,12 @@ def ask_gemini(articles):
         if len(selected) >= 55:
             break
 
+    # Classe les articles sélectionnés du plus récent au plus ancien
+    selected = sorted(
+        selected,
+        key=lambda x: x.get("date", ""),
+        reverse=True
+    )
     sources = []
 
     for i, article in enumerate(
