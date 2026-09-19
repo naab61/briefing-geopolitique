@@ -1320,6 +1320,14 @@ def add_publication_hours(text, articles):
     import re
     from html import escape
 
+    # Supprime les marqueurs de sources générés par Gemini.
+    text = re.sub(
+        r"\[?\s*SOURCE\s+\d+\s*\]?",
+        "",
+        text,
+        flags=re.IGNORECASE
+    )
+
     def source_link(source_number):
         article = next(
             (
