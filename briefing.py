@@ -1180,23 +1180,32 @@ def add_key_sources(text, articles, limit=12):
             quote=True
         )
 
-date_text = article.get("date", "")
-heure = ""
+        date_text = article.get("date", "")
+        heure = ""
 
-# Une heure n'est affichée que si elle est réellement fournie
-# par la source. Bellingcat fournit ici uniquement une date.
-if "T" in date_text or re.search(r"\d{2}:\d{2}", date_text):
-    try:
-        try:
-            dt = datetime.fromisoformat(
-                date_text.replace("Z", "+00:00")
-            )
-        except ValueError:
-            dt = parsedate_to_datetime(date_text)
+        if "T" in date_text or re.search(
+            r"\d{2}:\d{2}",
+            date_text
+        ):
+            try:
+                try:
+                    dt = datetime.fromisoformat(
+                        date_text.replace(
+                            "Z",
+                            "+00:00"
+                        )
+                    )
+                except ValueError:
+                    dt = parsedate_to_datetime(
+                        date_text
+                    )
 
-        heure = dt.strftime("%H:%M")
-    except Exception:
-        pass
+                heure = dt.strftime(
+                    "%H:%M"
+                )
+
+            except Exception:
+                pass
 
         prefix = f"- Source {number}"
 
@@ -1205,15 +1214,20 @@ if "T" in date_text or re.search(r"\d{2}:\d{2}", date_text):
 
         if title:
             lines.append(
-                f'{prefix} : <a href="{link}">{escape(title)}</a>'
+                f'{prefix} : <a href="{link}">'
+                f'{escape(title)}</a>'
             )
         else:
             lines.append(
-                f'{prefix} : <a href="{link}">Source</a>'
+                f'{prefix} : <a href="{link}">'
+                f'Source</a>'
             )
 
-    return text.rstrip() + "\n\n" + "\n".join(lines)
-
+    return (
+        text.rstrip()
+        + "\n\n"
+        + "\n".join(lines)
+    )
 # ============================================================
 # TELEGRAM — ENVOI
 # ============================================================
