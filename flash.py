@@ -384,6 +384,19 @@ def select_flash_events(posts):
 
     return selected
 
+def test_flash():
+    post = {
+        "channel": "TEST",
+        "post_id": "TEST",
+        "text": "🧪 TEST FLASH — message fictif pour vérifier le routage Telegram.",
+        "date": datetime.now(timezone.utc).isoformat(),
+    }
+    send_flash(post)
+
+
+if __name__ == "__main__":
+    test_flash()
+    # main()
 
 def main():
     posts = get_new_posts()
