@@ -672,7 +672,7 @@ def ask_gemini(articles):
         reverse=True
     )
 
-sources = []
+    sources = []
 
 for i, article in enumerate(
     selected,
