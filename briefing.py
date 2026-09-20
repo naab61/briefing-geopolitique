@@ -639,32 +639,32 @@ def ask_gemini(articles):
             break
 
     # Classe les articles sélectionnés du plus récent au plus ancien
-def publication_datetime(article):
-    date_text = article.get("date", "").strip()
+    def publication_datetime(article):
+        date_text = article.get("date", "").strip()
 
-    if not date_text:
-        return datetime.min.replace(
-            tzinfo=timezone.utc
-        )
-
-    try:
-        return datetime.fromisoformat(
-            date_text.replace(
-                "Z",
-                "+00:00"
-            )
-        )
-
-    except ValueError:
-        try:
-            return parsedate_to_datetime(
-                date_text
-            )
-
-        except Exception:
+        if not date_text:
             return datetime.min.replace(
                 tzinfo=timezone.utc
             )
+
+        try:
+            return datetime.fromisoformat(
+                date_text.replace(
+                    "Z",
+                    "+00:00"
+                )
+            )
+
+        except ValueError:
+            try:
+                return parsedate_to_datetime(
+                    date_text
+                )
+
+            except Exception:
+                return datetime.min.replace(
+                    tzinfo=timezone.utc
+                )
 
 selected = sorted(
     selected,
