@@ -176,6 +176,8 @@ def get_new_posts():
 
     new_posts = []
 
+    first_run = len(seen) == 0
+
     for channel in TELEGRAM_CHANNELS:
 
         username = channel["channel"]
@@ -247,6 +249,11 @@ def get_new_posts():
             )
 
     print(f"Total avant dédoublonnage : {len(new_posts)} nouveaux posts")
+
+    if first_run:
+        print("Premier lancement : flux initial mémorisé, aucun FLASH historique envoyé.")
+        return []
+    
     save_seen(seen)
 
     return new_posts
