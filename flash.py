@@ -389,7 +389,7 @@ def test_flash():
         "channel": "TEST",
         "post_id": "TEST",
         "text": "🧪 TEST FLASH — message fictif pour vérifier le routage Telegram.",
-        "link": "https://t.me/Géopolitique_flash",
+        "link": "https://t.me/Geopolitique_flash",
         "date": datetime.now(timezone.utc).isoformat(),
     }
     send_flash(post)
