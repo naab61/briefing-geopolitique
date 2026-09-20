@@ -309,36 +309,87 @@ FLASH_KEYWORDS = [
     "invasion", "invaded",
     "intercepted", "interception",
     "hostage", "hostages",
-    "war", "combat",
-    "emergency", "evacuation",
-    "oil refinery", "refinery",
-    "tanker", "tankers",
     "earthquake", "tsunami",
-    "nuclear",
-    "shooting"
+    "nuclear"
 ]
+
+STOPWORDS = {
+    "the", "and", "for", "with", "from", "that", "this", "are",
+    "has", "have", "was", "were", "into", "after", "before",
+    "over", "under", "its", "their", "they", "said", "says",
+    "les", "des", "une", "dans", "pour", "avec", "sur", "est",
+    "sont", "qui", "que", "aux", "par"
+}
+
+
+def normalize_words(text):
+    text = text.lower()
+    text = re.sub(r"https?://\S+", " ", text)
+    text = re.sub(r"[^a-z0-9àâçéèêëîïôûùüÿœæ\s]", " ", text)
+
+    words = {
+        word
+        for word in text.split()
+        if len(word) >= 4 and word not in STOPWORDS
+    }
+
+    return words
+
 
 def is_flash_candidate(post):
     text = post.get("text", "").lower()
-
     return any(keyword in text for keyword in FLASH_KEYWORDS)
 
 
-def main():
-    posts = get_new_posts()
+def same_event(post1, post2):
+    words1 = normalize_words(post1["text"])
+    words2 = normalize_words(post2["text"])
 
+    if not words1 or not words2:
+        return False
+
+    common = words1 & words2
+    union = words1 | words2
+
+    similarity = len(common) / len(union)
+
+    return similarity >= 0.45
+
+
+def select_flash_events(posts):
     candidates = [
         post for post in posts
         if is_flash_candidate(post)
     ]
 
-    print(f"{len(posts)} nouveaux posts détectés.")
-    print(f"{len(candidates)} candidats FLASH.")
+    selected = []
 
     for post in candidates:
+        duplicate = False
+
+        for existing in selected:
+            if same_event(post, existing):
+                duplicate = True
+                break
+
+        if not duplicate:
+            selected.append(post)
+
+    return selected
+
+
+def main():
+    posts = get_new_posts()
+
+    print(f"{len(posts)} nouveaux posts détectés.")
+
+    flash_events = select_flash_events(posts)
+
+    print(f"{len(flash_events)} événements FLASH retenus.")
+
+    for post in flash_events:
         send_flash(post)
         print("FLASH envoyé :", post["channel"], post["post_id"])
-
 
 if __name__ == "__main__":
 
