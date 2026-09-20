@@ -657,9 +657,12 @@ def ask_gemini(articles):
 
         except ValueError:
             try:
-                return parsedate_to_datetime(
-                    date_text
-                )
+                dt = parsedate_to_datetime(date_text)
+
+                if dt.tzinfo is None:
+                    dt = dt.replace(tzinfo=timezone.utc)
+
+                return dt
 
             except Exception:
                 return datetime.min.replace(
