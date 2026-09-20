@@ -198,6 +198,7 @@ def get_new_posts():
 
             parser = TelegramPostParser()
             parser.feed(html)
+            print(f"{channel['name']} : {len(parser.posts)} posts bruts détectés")
 
             for post in parser.posts:
 
@@ -233,6 +234,7 @@ def get_new_posts():
                 f"Erreur {channel['name']}: {e}"
             )
 
+    print(f"Total avant dédoublonnage : {len(new_posts)} nouveaux posts")
     save_seen(seen)
 
     return new_posts
