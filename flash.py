@@ -207,6 +207,7 @@ def get_new_posts():
                 )
 
                 if not post_id:
+                    print(f"POST SANS ID : {post.get('text', '')[:80]}")
                     continue
 
                 if post_id in seen:
