@@ -298,23 +298,46 @@ def send_flash(post):
         response.read()
 
 
-def main():
+FLASH_KEYWORDS = [
+    "airstrike", "airstrikes", "missile", "missiles",
+    "drone attack", "drone strike", "drone strikes",
+    "explosion", "explosions",
+    "attack", "attacks", "attacked",
+    "strike", "strikes", "struck",
+    "killed", "dead", "deaths", "casualties",
+    "ceasefire", "truce",
+    "invasion", "invaded",
+    "intercepted", "interception",
+    "hostage", "hostages",
+    "war", "combat",
+    "emergency", "evacuation",
+    "oil refinery", "refinery",
+    "tanker", "tankers",
+    "earthquake", "tsunami",
+    "nuclear",
+    "shooting"
+]
 
+def is_flash_candidate(post):
+    text = post.get("text", "").lower()
+
+    return any(keyword in text for keyword in FLASH_KEYWORDS)
+
+
+def main():
     posts = get_new_posts()
 
-    print(
-        f"{len(posts)} nouveaux posts détectés."
-    )
+    candidates = [
+        post for post in posts
+        if is_flash_candidate(post)
+    ]
 
-    for post in posts:
+    print(f"{len(posts)} nouveaux posts détectés.")
+    print(f"{len(candidates)} candidats FLASH.")
 
+    for post in candidates:
         send_flash(post)
-
-        print(
-            "FLASH envoyé :",
-            post["channel"],
-            post["post_id"]
-        )
+        print("FLASH envoyé :", post["channel"], post["post_id"])
 
 
 if __name__ == "__main__":
