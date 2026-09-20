@@ -57,6 +57,8 @@ class TelegramPostParser(HTMLParser):
 
         elif self.in_post and tag == "div":
             self.post_depth += 1
+            if "tgme_widget_message" in classes and attrs.get("data-post"):
+                self.current_post_id = attrs.get("data-post")
 
         if self.in_post and "tgme_widget_message_text" in classes:
             self.in_text = True
