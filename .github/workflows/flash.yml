@@ -1,0 +1,21 @@
+name: Flash geopolitique
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+      timezone: 'Europe/Paris'
+  workflow_dispatch:
+
+jobs:
+  flash:
+    runs-on: ubuntu-latest
+
+    env:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run flash
+        run: python flash.py
