@@ -710,7 +710,7 @@ LIEN :
 """.strip()
         )
 
-        prompt = """
+    prompt = """
 
 Tu es un analyste géopolitique francophone
 spécialisé en OSINT, renseignement en sources
