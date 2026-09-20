@@ -33,59 +33,68 @@ TELEGRAM_CHANNELS = [
 
 
 class TelegramPostParser(HTMLParser):
-
     def __init__(self):
         super().__init__()
-
         self.in_post = False
         self.post_depth = 0
         self.in_text = False
-
         self.current_text = []
         self.current_post_id = None
         self.current_date = ""
-
         self.posts = []
 
     def handle_starttag(self, tag, attrs):
-
         attrs = dict(attrs)
-
         classes = attrs.get("class", "")
 
         if "tgme_widget_message_wrap" in classes:
-
             self.in_post = True
             self.post_depth = 1
             self.in_text = False
             self.current_text = []
-
-            self.current_post_id = attrs.get(
-                "data-post"
-            )
-
+            self.current_post_id = attrs.get("data-post")
             self.current_date = ""
 
         elif self.in_post and tag == "div":
             self.post_depth += 1
 
-        if (
-            self.in_post
-            and "tgme_widget_message_text" in classes
-        ):
+        if self.in_post and "tgme_widget_message_text" in classes:
             self.in_text = True
             self.current_text = []
 
         if self.in_post and tag == "time":
-
-            value = attrs.get(
-                "datetime",
-                ""
-            )
-
+            value = attrs.get("datetime", "")
             if value:
                 self.current_date = value.strip()
 
+    def handle_data(self, data):
+        if self.in_post and self.in_text:
+            data = data.strip()
+            if data:
+                self.current_text.append(data)
+
+    def handle_endtag(self, tag):
+        if self.in_post and tag == "div":
+            self.post_depth -= 1
+
+            if self.post_depth > 0:
+                return
+
+            text = " ".join(self.current_text).strip()
+
+            if text and len(text) > 30:
+                self.posts.append({
+                    "text": text,
+                    "post_id": self.current_post_id,
+                    "date": self.current_date
+                })
+
+            self.in_post = False
+            self.post_depth = 0
+            self.in_text = False
+            self.current_text = []
+            self.current_post_id = None
+            self.current_date = ""
     def handle_data(self, data):
 
         if self.in_post and self.in_text:
