@@ -666,11 +666,11 @@ def ask_gemini(articles):
                     tzinfo=timezone.utc
                 )
 
-selected = sorted(
-    selected,
-    key=publication_datetime,
-    reverse=True
-)
+    selected = sorted(
+        selected,
+        key=publication_datetime,
+        reverse=True
+    )
 
 sources = []
 
