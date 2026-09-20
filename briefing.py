@@ -674,13 +674,13 @@ selected = sorted(
 
 sources = []
 
-    for i, article in enumerate(
-        selected,
-        start=1
-    ):
-        article["_source_number"] = i
+for i, article in enumerate(
+    selected,
+    start=1
+):
+    article["_source_number"] = i
 
-        sources.append(
+    sources.append(
             f"""
 SOURCE {i}
 
