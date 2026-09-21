@@ -397,32 +397,7 @@ def select_flash_events(posts):
 
     return selected
 
-def test_flash():
-    post = {
-        "channel": "TEST",
-        "post_id": "TEST",
-        "text": "🧪 TEST FLASH — message fictif pour vérifier le routage Telegram.",
-        "link": "https://t.me/",
-        "date": datetime.now(timezone.utc).isoformat(),
-    }
-    print("TELEGRAM_CHAT_ID =", TELEGRAM_CHAT_ID)
 
-    getme_url = (
-        f"https://api.telegram.org/bot"
-        f"{TELEGRAM_BOT_TOKEN}/getMe"
-    )
-
-    with urllib.request.urlopen(
-        getme_url,
-        timeout=30
-    ) as response:
-        print("BOT GITHUB =", response.read().decode("utf-8"))
-    send_flash(post)
-
-
-if __name__ == "__main__":
-    test_flash()
-    # main()
 
 def main():
     posts = get_new_posts()
