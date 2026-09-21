@@ -405,6 +405,18 @@ def test_flash():
         "link": "https://t.me/",
         "date": datetime.now(timezone.utc).isoformat(),
     }
+    print("TELEGRAM_CHAT_ID =", TELEGRAM_CHAT_ID)
+
+    getme_url = (
+        f"https://api.telegram.org/bot"
+        f"{TELEGRAM_BOT_TOKEN}/getMe"
+    )
+
+    with urllib.request.urlopen(
+        getme_url,
+        timeout=30
+    ) as response:
+        print("BOT GITHUB =", response.read().decode("utf-8"))
     send_flash(post)
 
 
