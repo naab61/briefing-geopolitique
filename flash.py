@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 
 TELEGRAM_BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 TELEGRAM_CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
+GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
 
 STATE_FILE = "flash_seen.json"
 
@@ -258,12 +259,103 @@ def get_new_posts():
 
     return new_posts
 
+def shorten_flash_with_gemini(source_text):
+
+    prompt = f"""
+Tu es un traducteur-résumeur pour un flux FLASH géopolitique.
+
+SOURCE :
+{source_text}
+
+Consignes STRICTES :
+
+- Traduis le texte en français.
+- Réduis-le à 1 ou 2 phrases très courtes.
+- Conserve uniquement les informations explicitement présentes dans SOURCE.
+- N'ajoute absolument aucune information provenant de tes connaissances.
+- N'ajoute aucun contexte.
+- N'ajoute aucune analyse.
+- N'ajoute aucune interprétation.
+- Ne déduis rien.
+- Ne transforme jamais une information incertaine en fait certain.
+- Conserve les nuances telles que "selon", "aurait", "des informations font état de", etc.
+- Si le texte contient plusieurs informations, conserve uniquement l'information principale de l'événement.
+- Réponds UNIQUEMENT avec le texte final en français.
+- Aucun titre.
+- Aucun emoji.
+- Aucun commentaire.
+
+SOURCE :
+{source_text}
+"""
+
+    payload = {
+        "contents": [
+            {
+                "parts": [
+                    {
+                        "text": prompt
+                    }
+                ]
+            }
+        ],
+        "generationConfig": {
+            "temperature": 0.0,
+            "maxOutputTokens": 120
+        }
+    }
+
+    data = json.dumps(payload).encode("utf-8")
+
+    url = (
+        "https://generativelanguage.googleapis.com/v1beta/models/"
+        "gemini-3.5-flash-lite:generateContent?key="
+        + GEMINI_API_KEY
+    )
+
+    request = urllib.request.Request(
+        url,
+        data=data,
+        headers={
+            "Content-Type": "application/json"
+        },
+        method="POST"
+    )
+
+    try:
+        with urllib.request.urlopen(
+            request,
+            timeout=30
+        ) as response:
+
+            result = json.loads(
+                response.read().decode("utf-8")
+            )
+
+        return (
+            result["candidates"][0]["content"]["parts"][0]["text"]
+            .strip()
+        )
+
+    except Exception as e:
+
+        print(
+            "ERREUR GEMINI FLASH :",
+            e
+        )
+
+        # En cas d'échec, on conserve le texte original.
+        return source_text
 
 def send_flash(post):
 
+    short_text = shorten_flash_with_gemini(
+        post["text"]
+    )
+
     text = (
         "⚡ <b>FLASH</b>\n\n"
-        f"{post['text']}\n\n"
+        f"{short_text}\n\n"
         f"🕒 {post['date']}\n"
         f"📡 {post['channel']}\n"
         f"🔗 <a href=\"{post['link']}\">"
@@ -272,17 +364,10 @@ def send_flash(post):
     )
 
     data = urllib.parse.urlencode({
-        "chat_id":
-            TELEGRAM_CHAT_ID,
-
-        "text":
-            text,
-
-        "parse_mode":
-            "HTML",
-
-        "disable_web_page_preview":
-            "true",
+        "chat_id": TELEGRAM_CHAT_ID,
+        "text": text,
+        "parse_mode": "HTML",
+        "disable_web_page_preview": "true",
     }).encode("utf-8")
 
     url = (
@@ -298,13 +383,16 @@ def send_flash(post):
     )
 
     try:
+
         with urllib.request.urlopen(
             request,
             timeout=30
         ) as response:
 
             response.read()
+
     except urllib.error.HTTPError as e:
+
         error_body = e.read().decode(
             "utf-8",
             errors="replace"
@@ -316,31 +404,6 @@ def send_flash(post):
         )
 
         raise
-
-
-FLASH_KEYWORDS = [
-    "airstrike", "airstrikes", "missile", "missiles",
-    "drone attack", "drone strike", "drone strikes",
-    "explosion", "explosions",
-    "attack", "attacks", "attacked",
-    "strike", "strikes", "struck",
-    "killed", "dead", "deaths", "casualties",
-    "ceasefire", "truce",
-    "invasion", "invaded",
-    "intercepted", "interception",
-    "hostage", "hostages",
-    "earthquake", "tsunami",
-    "nuclear"
-]
-
-STOPWORDS = {
-    "the", "and", "for", "with", "from", "that", "this", "are",
-    "has", "have", "was", "were", "into", "after", "before",
-    "over", "under", "its", "their", "they", "said", "says",
-    "les", "des", "une", "dans", "pour", "avec", "sur", "est",
-    "sont", "qui", "que", "aux", "par"
-}
-
 
 def normalize_words(text):
     text = text.lower()
