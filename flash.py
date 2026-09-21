@@ -13,6 +13,29 @@ GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
 
 STATE_FILE = "flash_seen.json"
 
+FLASH_KEYWORDS = [
+    "airstrike", "airstrikes", "missile", "missiles",
+    "drone attack", "drone strike", "drone strikes",
+    "explosion", "explosions",
+    "attack", "attacks", "attacked",
+    "strike", "strikes", "struck",
+    "killed", "dead", "deaths", "casualties",
+    "ceasefire", "truce",
+    "invasion", "invaded",
+    "intercepted", "interception",
+    "hostage", "hostages",
+    "earthquake", "tsunami",
+    "nuclear"
+]
+
+STOPWORDS = {
+    "the", "and", "for", "with", "from", "that", "this", "are",
+    "has", "have", "was", "were", "into", "after", "before",
+    "over", "under", "its", "their", "they", "said", "says",
+    "les", "des", "une", "dans", "pour", "avec", "sur", "est",
+    "sont", "qui", "que", "aux", "par"
+}
+
 TELEGRAM_CHANNELS = [
     {
         "name": "OSINTdefender",
