@@ -297,12 +297,25 @@ def send_flash(post):
         method="POST"
     )
 
-    with urllib.request.urlopen(
-        request,
-        timeout=30
-    ) as response:
+    try:
+        with urllib.request.urlopen(
+            request,
+            timeout=30
+        ) as response:
 
-        response.read()
+            response.read()
+    except urllib.error.HTTPError as e:
+        error_body = e.read().decode(
+            "utf-8",
+            errors="replace"
+        )
+
+        print(
+            "ERREUR TELEGRAM FLASH :",
+            error_body
+        )
+
+        raise
 
 
 FLASH_KEYWORDS = [
