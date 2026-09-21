@@ -8,7 +8,7 @@ from html.parser import HTMLParser
 from datetime import datetime, timezone
 
 TELEGRAM_BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
-TELEGRAM_CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
+TELEGRAM_CHAT_ID = os.environ["TELEGRAM_FLASH_CHAT_ID"]
 
 STATE_FILE = "flash_seen.json"
 
