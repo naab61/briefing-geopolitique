@@ -14,18 +14,86 @@ GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
 STATE_FILE = "flash_seen.json"
 
 FLASH_KEYWORDS = [
-    "airstrike", "airstrikes", "missile", "missiles",
+    # Conflits / sécurité
+    "airstrike", "airstrikes",
+    "missile", "missiles",
     "drone attack", "drone strike", "drone strikes",
     "explosion", "explosions",
     "attack", "attacks", "attacked",
     "strike", "strikes", "struck",
     "killed", "dead", "deaths", "casualties",
-    "ceasefire", "truce",
+    "clash", "clashes",
+    "fighting",
+    "shelling",
+    "bombing",
     "invasion", "invaded",
     "intercepted", "interception",
     "hostage", "hostages",
-    "earthquake", "tsunami",
-    "nuclear"
+    "ceasefire", "truce",
+
+    # Crises politiques / institutionnelles
+    "coup",
+    "coup attempt",
+    "resignation",
+    "resigns",
+    "resigned",
+    "government collapse",
+    "government falls",
+    "state of emergency",
+    "martial law",
+    "arrested",
+    "arrest",
+    "detained",
+    "detention",
+
+    # Manifestations / troubles majeurs
+    "protest",
+    "protests",
+    "protesters",
+    "demonstration",
+    "demonstrations",
+    "riot",
+    "riots",
+    "unrest",
+    "mass protest",
+
+    # Diplomatie / relations internationales
+    "diplomatic crisis",
+    "diplomatic relations",
+    "ambassador",
+    "expelled",
+    "expels",
+    "expulsion",
+    "embassy",
+    "break diplomatic relations",
+    "diplomatic ties",
+
+    # Mesures internationales majeures
+    "sanctions",
+    "sanctioned",
+    "tariffs",
+    "blockade",
+    "blocked",
+    "border closed",
+    "border closure",
+    "airspace closed",
+    "airspace closure",
+
+    # Catastrophes / événements majeurs
+    "earthquake",
+    "tsunami",
+    "flood",
+    "floods",
+    "wildfire",
+    "wildfires",
+    "volcanic eruption",
+    "eruption",
+    "disaster",
+
+    # Stratégique / nucléaire
+    "nuclear",
+    "nuclear threat",
+    "nuclear test"
 ]
 
 STOPWORDS = {
