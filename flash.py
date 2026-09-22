@@ -557,6 +557,28 @@ def normalize_words(text):
 
     return words
 
+def is_flash_recent(post, max_minutes=30):
+    date_text = post.get("date", "")
+
+    if not date_text:
+        return False
+
+    try:
+        dt = datetime.fromisoformat(
+            date_text.replace("Z", "+00:00")
+        )
+
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+
+        age_minutes = (
+            datetime.now(timezone.utc) - dt
+        ).total_seconds() / 60
+
+        return 0 <= age_minutes <= max_minutes
+
+    except Exception:
+        return False
 
 def is_flash_candidate(post):
     text = post.get("text", "").lower()
@@ -591,7 +613,8 @@ def select_flash_events(posts):
 
     candidates = [
         post for post in posts
-        if is_flash_candidate(post)
+        if is_flash_recent(post)
+        and is_flash_candidate(post)
     ]
 
     selected = []
