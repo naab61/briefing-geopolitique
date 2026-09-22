@@ -582,7 +582,77 @@ def is_flash_recent(post, max_minutes=30):
 
 def is_flash_candidate(post):
     text = post.get("text", "").lower()
-    return any(keyword in text for keyword in FLASH_KEYWORDS)
+
+    # Événements militaires / sécuritaires
+    military_keywords = [
+        "airstrike", "airstrikes",
+        "missile", "missiles",
+        "drone attack", "drone strike", "drone strikes",
+        "explosion", "explosions",
+        "attack", "attacks", "attacked",
+        "strike", "strikes", "struck",
+        "killed", "dead", "deaths", "casualties",
+        "invasion", "invaded",
+        "intercepted", "interception",
+        "hostage", "hostages",
+    ]
+
+    # Crises politiques / diplomatiques
+    political_keywords = [
+        "coup", "coup attempt",
+        "resigns", "resigned", "resignation",
+        "impeachment",
+        "government collapses", "government collapsed",
+        "declares emergency", "state of emergency",
+        "martial law",
+        "mobilization", "mobilisation",
+        "ceasefire", "truce",
+        "peace deal", "peace agreement",
+        "breaks diplomatic relations",
+        "diplomatic relations",
+        "ambassador expelled",
+        "expels ambassador",
+        "sanctions",
+        "sanctioned",
+        "election crisis",
+        "protests", "protesters",
+        "mass protest",
+        "riot", "riots",
+    ]
+
+    # Catastrophes / événements majeurs
+    disaster_keywords = [
+        "earthquake", "tsunami",
+        "hurricane", "typhoon",
+        "tornado",
+        "flood", "flooding",
+        "wildfire",
+        "volcanic eruption",
+        "plane crash", "aircraft crash",
+        "train crash",
+        "major accident",
+    ]
+
+    # Enjeu stratégique exceptionnel
+    strategic_keywords = [
+        "nuclear test",
+        "nuclear attack",
+        "nuclear strike",
+        "nuclear threat",
+        "nuclear weapon",
+        "nuclear weapons",
+        "radiation leak",
+        "reactor accident",
+    ]
+
+    all_keywords = (
+        military_keywords
+        + political_keywords
+        + disaster_keywords
+        + strategic_keywords
+    )
+
+    return any(keyword in text for keyword in all_keywords)
 
 
 def same_event(post1, post2):
