@@ -361,23 +361,26 @@ SOURCE :
 Consignes STRICTES :
 
 - Traduis le texte en français.
-- Réduis-le à 1 ou 2 phrases très courtes.
+- Produis un titre très court de 1 à 4 mots.
+- Le titre doit reprendre uniquement un lieu ou un sujet explicitement présent dans SOURCE.
+- Si aucun lieu ou sujet clair n'est identifiable, utilise exactement : ÉVÉNEMENT
+- Produis ensuite un résumé de 1 ou 2 phrases très courtes.
 - Conserve uniquement les informations explicitement présentes dans SOURCE.
 - N'ajoute absolument aucune information provenant de tes connaissances.
-- N'ajoute aucun contexte.
-- N'ajoute aucune analyse.
-- N'ajoute aucune interprétation.
-- Ne déduis rien.
+- Aucun contexte supplémentaire.
+- Aucune analyse.
+- Aucune interprétation.
+- Aucune déduction.
 - Ne transforme jamais une information incertaine en fait certain.
 - Conserve les nuances telles que "selon", "aurait", "des informations font état de", etc.
-- Si le texte contient plusieurs informations, conserve uniquement l'information principale de l'événement.
-- Réponds UNIQUEMENT avec le texte final en français.
-- Aucun titre.
-- Aucun emoji.
-- Aucun commentaire.
+- Si plusieurs informations sont présentes, conserve uniquement l'information principale.
 
-SOURCE :
-{source_text}
+Réponds EXACTEMENT sous cette forme :
+
+TITRE: [titre]
+RESUME: [résumé]
+
+Aucun autre texte.
 """
 
     payload = {
@@ -396,8 +399,6 @@ SOURCE :
         }
     }
 
-    data = json.dumps(payload).encode("utf-8")
-
     url = (
         "https://generativelanguage.googleapis.com/v1beta/models/"
         "gemini-3.5-flash-lite:generateContent?key="
@@ -406,7 +407,7 @@ SOURCE :
 
     request = urllib.request.Request(
         url,
-        data=data,
+        data=json.dumps(payload).encode("utf-8"),
         headers={
             "Content-Type": "application/json"
         },
@@ -414,6 +415,7 @@ SOURCE :
     )
 
     try:
+
         with urllib.request.urlopen(
             request,
             timeout=30
@@ -423,10 +425,34 @@ SOURCE :
                 response.read().decode("utf-8")
             )
 
-        return (
-            result["candidates"][0]["content"]["parts"][0]["text"]
+        text = (
+            result["candidates"][0]
+            ["content"]["parts"][0]["text"]
             .strip()
         )
+
+        title_match = re.search(
+            r"(?im)^TITRE:\s*(.+)$",
+            text
+        )
+
+        summary_match = re.search(
+            r"(?im)^RESUME:\s*(.+)$",
+            text
+        )
+
+        if not title_match or not summary_match:
+            raise ValueError(
+                "Format Gemini FLASH inattendu"
+            )
+
+        title = title_match.group(1).strip()
+        summary = summary_match.group(1).strip()
+
+        return {
+            "title": title,
+            "summary": summary
+        }
 
     except Exception as e:
 
@@ -435,9 +461,10 @@ SOURCE :
             e
         )
 
-        # En cas d'échec, on conserve le texte original.
-        return source_text
-
+        return {
+            "title": "ÉVÉNEMENT",
+            "summary": source_text
+        }
 def format_flash_time(date_string):
     try:
         dt = datetime.fromisoformat(
@@ -454,32 +481,34 @@ def format_flash_time(date_string):
 
 def send_flash(post):
 
-    short_text = shorten_flash_with_gemini(
+    result = shorten_flash_with_gemini(
         post["text"]
     )
 
+    title = result["title"]
+    summary = result["summary"]
+
     text = (
-        "⚡ <b>FLASH</b>\n\n"
-        f"{short_text}\n\n"
+        f"🔴 <b>FLASH — "
+        f"{title.upper()}</b>\n\n"
+        f"{summary}\n\n"
         f"🕒 {format_flash_time(post['date'])}\n"
         f"📡 {post['channel']}\n"
         f"🔗 <a href=\"{post['link']}\">"
-        f"Source originale"
-        f"</a>"
+        f"Source originale</a>"
+    )
+
+    url = (
+        f"https://api.telegram.org/bot"
+        f"{TELEGRAM_BOT_TOKEN}/sendMessage"
     )
 
     data = urllib.parse.urlencode({
         "chat_id": TELEGRAM_CHAT_ID,
         "text": text,
         "parse_mode": "HTML",
-        "disable_web_page_preview": "true",
+        "disable_web_page_preview": "true"
     }).encode("utf-8")
-
-    url = (
-        "https://api.telegram.org/bot"
-        + TELEGRAM_BOT_TOKEN
-        + "/sendMessage"
-    )
 
     request = urllib.request.Request(
         url,
@@ -496,6 +525,12 @@ def send_flash(post):
 
             response.read()
 
+        print(
+            "FLASH envoyé :",
+            post["channel"],
+            post["post_id"]
+        )
+
     except urllib.error.HTTPError as e:
 
         error_body = e.read().decode(
@@ -504,12 +539,11 @@ def send_flash(post):
         )
 
         print(
-            "ERREUR TELEGRAM FLASH :",
+            "ERREUR TELEGRAM :",
             error_body
         )
 
         raise
-
 def normalize_words(text):
     text = text.lower()
     text = re.sub(r"https?://\S+", " ", text)
