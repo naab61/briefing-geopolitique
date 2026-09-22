@@ -438,6 +438,20 @@ SOURCE :
         # En cas d'échec, on conserve le texte original.
         return source_text
 
+def format_flash_time(date_string):
+    try:
+        dt = datetime.fromisoformat(
+            date_string.replace("Z", "+00:00")
+        )
+
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+
+        return dt.astimezone().strftime("%H:%M")
+
+    except Exception:
+        return date_string
+
 def send_flash(post):
 
     short_text = shorten_flash_with_gemini(
@@ -447,7 +461,7 @@ def send_flash(post):
     text = (
         "⚡ <b>FLASH</b>\n\n"
         f"{short_text}\n\n"
-        f"🕒 {post['date']}\n"
+        f"🕒 {format_flash_time(post['date'])}\n"
         f"📡 {post['channel']}\n"
         f"🔗 <a href=\"{post['link']}\">"
         f"Source originale"
