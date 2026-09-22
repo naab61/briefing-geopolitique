@@ -516,6 +516,7 @@ def is_flash_candidate(post):
 
 
 def same_event(post1, post2):
+
     words1 = normalize_words(post1["text"])
     words2 = normalize_words(post2["text"])
 
@@ -523,14 +524,23 @@ def same_event(post1, post2):
         return False
 
     common = words1 & words2
-    union = words1 | words2
 
-    similarity = len(common) / len(union)
+    # Il faut au moins plusieurs mots significatifs en commun
+    if len(common) >= 4:
+        return True
 
-    return similarity >= 0.45
+    # Pour les messages très courts, on reste plus prudent
+    if len(common) >= 3:
+        smaller = min(len(words1), len(words2))
+
+        if smaller <= 8:
+            return True
+
+    return False
 
 
 def select_flash_events(posts):
+
     candidates = [
         post for post in posts
         if is_flash_candidate(post)
@@ -539,9 +549,11 @@ def select_flash_events(posts):
     selected = []
 
     for post in candidates:
+
         duplicate = False
 
         for existing in selected:
+
             if same_event(post, existing):
                 duplicate = True
                 break
@@ -550,8 +562,6 @@ def select_flash_events(posts):
             selected.append(post)
 
     return selected
-
-
 
 def main():
     posts = get_new_posts()
