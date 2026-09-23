@@ -105,24 +105,10 @@ STOPWORDS = {
 }
 
 TELEGRAM_CHANNELS = [
-    {
-        "name": "OSINTdefender",
-        "channel": "osintdefender",
-    },
-    {
-        "name": "GeoConfirmed",
-        "channel": "csources",
-    },
-    {
-        "name": "OSINT Live",
-        "channel": "OSINTLive",
-    },
-    {
-        "name": "Liveuamap",
-        "channel": "liveuamap",
-    },
+    {"name": "OSINTdefender", "channel": "osintdefender"},
+    {"name": "GeoConfirmed", "channel": "csources"},
+    {"name": "Liveuamap", "channel": "liveuamap"},
 ]
-
 
 class TelegramPostParser(HTMLParser):
     def __init__(self):
@@ -582,6 +568,33 @@ def is_flash_recent(post, max_minutes=30):
 
 def is_flash_candidate(post):
     text = post.get("text", "").lower()
+
+        # Exclure les informations industrielles, contractuelles
+    # et les annonces d'armement qui ne constituent pas un événement.
+    excluded_keywords = [
+        "contract",
+        "awarded",
+        "award",
+        "procurement",
+        "production contract",
+        "production of",
+        "million contract",
+        "billion contract",
+        "worth $",
+        "worth €",
+        "program",
+        "programme",
+        "development",
+        "developed",
+        "facility",
+        "megawatts",
+        "mw",
+        "power plant",
+        "nuclear power plant",
+    ]
+
+    if any(keyword in text for keyword in excluded_keywords):
+        return False
 
     # Événements militaires / sécuritaires
     military_keywords = [
