@@ -12,6 +12,7 @@ TELEGRAM_CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
 GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
 
 STATE_FILE = "flash_seen.json"
+EVENT_STATE_FILE = "flash_events.json"
 
 FLASH_KEYWORDS = [
     # Conflits / sécurité
@@ -247,6 +248,36 @@ def save_seen(seen):
             indent=2
         )
 
+def load_event_state():
+    if not os.path.exists(EVENT_STATE_FILE):
+        return []
+
+    try:
+        with open(EVENT_STATE_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return []
+
+
+def save_event_state(events):
+    with open(EVENT_STATE_FILE, "w", encoding="utf-8") as f:
+        json.dump(events[-100:], f, ensure_ascii=False, indent=2)
+
+def event_already_sent(post, events):
+    for old_event in events:
+
+        old_words = set(old_event.get("words", []))
+        new_words = normalize_words(post.get("text", ""))
+
+        if not old_words or not new_words:
+            continue
+
+        common = old_words & new_words
+
+        if len(common) >= 5:
+            return True
+
+    return False
 
 def get_new_posts():
 
@@ -511,6 +542,18 @@ def send_flash(post):
 
             response.read()
 
+            # Mémoriser l'événement seulement après un envoi Telegram réussi
+        events = load_event_state()
+
+        events.append({
+            "words": list(normalize_words(post.get("text", ""))),
+            "date": post.get("date", ""),
+            "channel": post.get("channel", ""),
+            "post_id": post.get("post_id", "")
+        })
+
+        save_event_state(events)
+
         print(
             "FLASH envoyé :",
             post["channel"],
@@ -728,6 +771,13 @@ def select_flash_events(posts):
         post for post in posts
         if is_flash_recent(post)
         and is_flash_candidate(post)
+    ]
+
+    previous_events = load_event_state()
+
+    candidates = [
+        post for post in candidates
+        if not event_already_sent(post, previous_events)
     ]
 
     selected = []
