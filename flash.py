@@ -670,28 +670,58 @@ def is_flash_candidate(post):
 
 def same_event(post1, post2):
 
-    words1 = normalize_words(post1["text"])
-    words2 = normalize_words(post2["text"])
+    text1 = post1.get("text", "").lower()
+    text2 = post2.get("text", "").lower()
+
+    words1 = normalize_words(text1)
+    words2 = normalize_words(text2)
 
     if not words1 or not words2:
         return False
 
     common = words1 & words2
 
-    # Il faut au moins plusieurs mots significatifs en commun
-    if len(common) >= 4:
+    # Même lieu clairement mentionné
+    locations = [
+        "kyiv", "kiev", "moscow", "moscou",
+        "odesa", "odessa",
+        "kharkiv", "kherson",
+        "zaporizhzhia", "zaporizhzhia",
+        "donetsk", "luhansk",
+        "gaza", "lebanon", "liban",
+        "beirut", "beyrouth",
+        "syria", "syrie",
+        "yemen", "yémen",
+        "iran", "israel", "israël",
+        "iraq", "irak",
+        "russia", "russie",
+        "ukraine",
+        "durban",
+        "oufa", "ufa",
+        "kouïbychev", "kuibyshev",
+    ]
+
+    shared_locations = [
+        location
+        for location in locations
+        if location in text1 and location in text2
+    ]
+
+    if shared_locations and len(common) >= 2:
         return True
 
-    # Pour les messages très courts, on reste plus prudent
+    # Même événement avec beaucoup de vocabulaire commun
+    if len(common) >= 5:
+        return True
+
+    # Messages courts mais très proches
     if len(common) >= 3:
         smaller = min(len(words1), len(words2))
 
-        if smaller <= 8:
+        if smaller <= 10:
             return True
 
     return False
-
-
 def select_flash_events(posts):
 
     candidates = [
