@@ -165,5 +165,11 @@
     "date": "2026-09-24T18:28:32+00:00",
     "channel": "GeoConfirmed",
     "post_id": "csources/527433"
+  },
+  {
+    "signature": "nucleaire|moscow",
+    "date": "2026-09-24T21:55:49+00:00",
+    "channel": "GeoConfirmed",
+    "post_id": "csources/527473"
   }
 ]
