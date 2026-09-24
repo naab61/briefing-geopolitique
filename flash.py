@@ -7,6 +7,11 @@ import urllib.error
 from html.parser import HTMLParser
 from datetime import datetime, timezone
 
+
+# ============================================================
+# CONFIGURATION
+# ============================================================
+
 TELEGRAM_BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 TELEGRAM_CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
 GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
@@ -14,96 +19,9 @@ GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
 STATE_FILE = "flash_seen.json"
 EVENT_STATE_FILE = "flash_events.json"
 
-FLASH_KEYWORDS = [
-    # Conflits / sécurité
-    "airstrike", "airstrikes",
-    "missile", "missiles",
-    "drone attack", "drone strike", "drone strikes",
-    "explosion", "explosions",
-    "attack", "attacks", "attacked",
-    "strike", "strikes", "struck",
-    "killed", "dead", "deaths", "casualties",
-    "clash", "clashes",
-    "fighting",
-    "shelling",
-    "bombing",
-    "invasion", "invaded",
-    "intercepted", "interception",
-    "hostage", "hostages",
-    "ceasefire", "truce",
+MAX_POST_AGE_MINUTES = 30
+EVENT_MEMORY_HOURS = 6
 
-    # Crises politiques / institutionnelles
-    "coup",
-    "coup attempt",
-    "resignation",
-    "resigns",
-    "resigned",
-    "government collapse",
-    "government falls",
-    "state of emergency",
-    "martial law",
-    "arrested",
-    "arrest",
-    "detained",
-    "detention",
-
-    # Manifestations / troubles majeurs
-    "protest",
-    "protests",
-    "protesters",
-    "demonstration",
-    "demonstrations",
-    "riot",
-    "riots",
-    "unrest",
-    "mass protest",
-
-    # Diplomatie / relations internationales
-    "diplomatic crisis",
-    "diplomatic relations",
-    "ambassador",
-    "expelled",
-    "expels",
-    "expulsion",
-    "embassy",
-    "break diplomatic relations",
-    "diplomatic ties",
-
-    # Mesures internationales majeures
-    "sanctions",
-    "sanctioned",
-    "tariffs",
-    "blockade",
-    "blocked",
-    "border closed",
-    "border closure",
-    "airspace closed",
-    "airspace closure",
-
-    # Catastrophes / événements majeurs
-    "earthquake",
-    "tsunami",
-    "flood",
-    "floods",
-    "wildfire",
-    "wildfires",
-    "volcanic eruption",
-    "eruption",
-    "disaster",
-
-    # Stratégique / nucléaire
-    "nuclear",
-    "nuclear threat",
-    "nuclear test"
-]
-
-STOPWORDS = {
-    "the", "and", "for", "with", "from", "that", "this", "are",
-    "has", "have", "was", "were", "into", "after", "before",
-    "over", "under", "its", "their", "they", "said", "says",
-    "les", "des", "une", "dans", "pour", "avec", "sur", "est",
-    "sont", "qui", "que", "aux", "par"
-}
 
 TELEGRAM_CHANNELS = [
     {"name": "OSINTdefender", "channel": "osintdefender"},
@@ -111,72 +29,362 @@ TELEGRAM_CHANNELS = [
     {"name": "Liveuamap", "channel": "liveuamap"},
 ]
 
+
+STOPWORDS = {
+    "the", "and", "for", "with", "from", "that", "this",
+    "are", "has", "have", "was", "were", "into", "after",
+    "before", "over", "under", "its", "their", "they",
+    "said", "says", "will", "been", "being", "than",
+    "les", "des", "une", "dans", "pour", "avec", "sur",
+    "est", "sont", "qui", "que", "aux", "par", "mais",
+    "plus", "sans", "selon"
+}
+
+
+# ============================================================
+# TYPES D'ÉVÉNEMENTS
+# ============================================================
+
+EVENT_PATTERNS = {
+    "attaque": [
+        "airstrike",
+        "airstrikes",
+        "air strike",
+        "drone attack",
+        "drone attacks",
+        "drone strike",
+        "drone strikes",
+        "missile attack",
+        "missile strike",
+        "missile strikes",
+        "bombing",
+        "bombed",
+        "explosion",
+        "explosions",
+    ],
+
+    "victimes": [
+        "killed",
+        "dead",
+        "deaths",
+        "casualties",
+        "massacre",
+        "mass shooting",
+    ],
+
+    "affrontement_majeur": [
+        "invasion",
+        "invaded",
+        "major clashes",
+        "heavy fighting",
+        "large-scale fighting",
+    ],
+
+    "crise_politique": [
+        "coup",
+        "coup attempt",
+        "resignation",
+        "resigns",
+        "resigned",
+        "government collapse",
+        "government collapsed",
+        "government falls",
+        "state of emergency",
+        "martial law",
+        "mobilization",
+        "mobilisation",
+    ],
+
+    "manifestation": [
+        "mass protest",
+        "mass protests",
+        "mass demonstration",
+        "mass demonstrations",
+        "riot",
+        "riots",
+        "major unrest",
+    ],
+
+    "diplomatie": [
+        "break diplomatic relations",
+        "breaks diplomatic relations",
+        "diplomatic relations severed",
+        "ambassador expelled",
+        "ambassador expelled",
+        "expels ambassador",
+        "expelled its ambassador",
+        "embassy attack",
+        "embassy attacked",
+    ],
+
+    "cessez_le_feu": [
+        "ceasefire",
+        "cease-fire",
+        "truce",
+        "peace deal",
+        "peace agreement",
+    ],
+
+    "catastrophe": [
+        "earthquake",
+        "tsunami",
+        "hurricane",
+        "typhoon",
+        "tornado",
+        "major flood",
+        "major flooding",
+        "wildfire",
+        "wildfires",
+        "volcanic eruption",
+        "plane crash",
+        "aircraft crash",
+        "train crash",
+        "ship collision",
+        "major accident",
+    ],
+
+    "nucleaire": [
+        "nuclear test",
+        "nuclear attack",
+        "nuclear strike",
+        "nuclear threat",
+        "nuclear weapons used",
+        "radiation leak",
+        "reactor accident",
+    ],
+
+    "otage": [
+        "hostage situation",
+        "hostages taken",
+        "hostages seized",
+        "hostage crisis",
+    ],
+
+    "fermeture_majeure": [
+        "airspace closed",
+        "airspace closure",
+        "airport closed",
+        "airport closure",
+        "border closed",
+        "border closure",
+    ],
+}
+
+
+# ============================================================
+# MOTIFS À EXCLURE
+# ============================================================
+
+EXCLUDED_PATTERNS = [
+    # Contrats / industrie / achats
+    "contract",
+    "contracts",
+    "awarded",
+    "award",
+    "procurement",
+    "production contract",
+    "production of",
+    "million contract",
+    "billion contract",
+    "worth $",
+    "worth €",
+
+    # Programmes / développement
+    "development program",
+    "development programme",
+    "development of",
+    "developing",
+    "developed a new",
+    "new program",
+    "new programme",
+
+    # Installations / infrastructures
+    "facility",
+    "facilities",
+    "megawatts",
+    "megawatt",
+    "mw power",
+    "power plant",
+    "nuclear power plant",
+
+    # Communication / commentaire sans événement concret
+    "statement",
+    "statements",
+    "said on social media",
+    "said in a statement",
+    "says in a statement",
+    "commented on",
+    "commentary",
+    "analysis",
+    "analysts say",
+    "experts say",
+
+    # Rumeur / narration sociale sans événement établi
+    "publications font état",
+    "social media posts claim",
+    "social media reports",
+    "posts claim",
+    "posts reportedly",
+    "reportedly claims",
+]
+
+
+# ============================================================
+# LIEUX UTILISÉS POUR LA DÉTECTION D'ÉVÉNEMENTS
+# ============================================================
+
+LOCATIONS = [
+    # Ukraine / Russie
+    "kyiv",
+    "kiev",
+    "odesa",
+    "odessa",
+    "kharkiv",
+    "kherson",
+    "zaporizhzhia",
+    "zaporizhzhia",
+    "donetsk",
+    "luhansk",
+    "mariupol",
+    "crimea",
+    "crimea",
+    "moscow",
+    "moscou",
+    "st petersburg",
+    "saint petersburg",
+    "russia",
+    "russie",
+    "ukraine",
+
+    # Moyen-Orient
+    "gaza",
+    "rafah",
+    "beirut",
+    "beyrouth",
+    "lebanon",
+    "liban",
+    "israel",
+    "israël",
+    "iran",
+    "syria",
+    "syrie",
+    "damascus",
+    "iraq",
+    "irak",
+    "baghdad",
+    "yemen",
+    "yémen",
+    "sanaa",
+    "sana'a",
+
+    # États-Unis / Europe
+    "washington",
+    "new york",
+    "london",
+    "paris",
+    "berlin",
+    "brussels",
+    "bruxelles",
+
+    # Afrique
+    "sudan",
+    "soudan",
+    "khartoum",
+    "somalia",
+    "somalie",
+    "ethiopia",
+    "ethiopie",
+    "nigeria",
+    "south africa",
+    "durban",
+
+    # Asie
+    "china",
+    "chine",
+    "beijing",
+    "taiwan",
+    "japan",
+    "japon",
+    "north korea",
+    "south korea",
+    "india",
+    "pakistan",
+
+    # Autres lieux déjà rencontrés
+    "oufa",
+    "ufa",
+    "kuibyshev",
+    "kouïbychev",
+    "aberdeen",
+]
+
+
+# ============================================================
+# PARSEUR TELEGRAM
+# ============================================================
+
 class TelegramPostParser(HTMLParser):
+
     def __init__(self):
         super().__init__()
+
         self.in_post = False
         self.post_depth = 0
         self.in_text = False
+
         self.current_text = []
         self.current_post_id = None
         self.current_date = ""
+
         self.posts = []
 
     def handle_starttag(self, tag, attrs):
+
         attrs = dict(attrs)
         classes = attrs.get("class", "")
 
+        # Début d'un post
         if "tgme_widget_message_wrap" in classes:
+
             self.in_post = True
             self.post_depth = 1
+
             self.in_text = False
             self.current_text = []
+
             self.current_post_id = attrs.get("data-post")
             self.current_date = ""
 
-        elif self.in_post and tag == "div":
+            return
+
+        # Divs internes du post
+        if self.in_post and tag == "div":
+
             self.post_depth += 1
-            if "tgme_widget_message" in classes and attrs.get("data-post"):
+
+            if (
+                "tgme_widget_message" in classes
+                and attrs.get("data-post")
+            ):
                 self.current_post_id = attrs.get("data-post")
 
-        if self.in_post and "tgme_widget_message_text" in classes:
+        # Texte du message
+        if (
+            self.in_post
+            and "tgme_widget_message_text" in classes
+        ):
             self.in_text = True
             self.current_text = []
 
+        # Date du message
         if self.in_post and tag == "time":
+
             value = attrs.get("datetime", "")
+
             if value:
                 self.current_date = value.strip()
 
     def handle_data(self, data):
-        if self.in_post and self.in_text:
-            data = data.strip()
-            if data:
-                self.current_text.append(data)
-
-    def handle_endtag(self, tag):
-        if self.in_post and tag == "div":
-            self.post_depth -= 1
-
-            if self.post_depth > 0:
-                return
-
-            text = " ".join(self.current_text).strip()
-
-            if text and len(text) > 30:
-                self.posts.append({
-                    "text": text,
-                    "post_id": self.current_post_id,
-                    "date": self.current_date
-                })
-
-            self.in_post = False
-            self.post_depth = 0
-            self.in_text = False
-            self.current_text = []
-            self.current_post_id = None
-            self.current_date = ""
-    def handle_data(self, data):
 
         if self.in_post and self.in_text:
 
@@ -187,7 +395,10 @@ class TelegramPostParser(HTMLParser):
 
     def handle_endtag(self, tag):
 
-        if self.in_post and tag == "div":
+        if not self.in_post:
+            return
+
+        if tag == "div":
 
             self.post_depth -= 1
 
@@ -198,7 +409,10 @@ class TelegramPostParser(HTMLParser):
                 self.current_text
             ).strip()
 
-            if text and len(text) > 30:
+            if (
+                text
+                and len(text) > 30
+            ):
 
                 self.posts.append({
                     "text": text,
@@ -208,11 +422,17 @@ class TelegramPostParser(HTMLParser):
 
             self.in_post = False
             self.post_depth = 0
+
             self.in_text = False
             self.current_text = []
+
             self.current_post_id = None
             self.current_date = ""
 
+
+# ============================================================
+# ÉTAT DES POSTS DÉJÀ VUS
+# ============================================================
 
 def load_seen():
 
@@ -248,36 +468,311 @@ def save_seen(seen):
             indent=2
         )
 
+
+# ============================================================
+# ÉTAT DES ÉVÉNEMENTS FLASH
+# ============================================================
+
 def load_event_state():
-    if not os.path.exists(EVENT_STATE_FILE):
+
+    if not os.path.exists(
+        EVENT_STATE_FILE
+    ):
         return []
 
     try:
-        with open(EVENT_STATE_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
+
+        with open(
+            EVENT_STATE_FILE,
+            "r",
+            encoding="utf-8"
+        ) as f:
+
+            data = json.load(f)
+
+            if isinstance(data, list):
+                return data
+
+            return []
+
     except Exception:
+
         return []
 
 
 def save_event_state(events):
-    with open(EVENT_STATE_FILE, "w", encoding="utf-8") as f:
-        json.dump(events[-100:], f, ensure_ascii=False, indent=2)
 
-def event_already_sent(post, events):
+    with open(
+        EVENT_STATE_FILE,
+        "w",
+        encoding="utf-8"
+    ) as f:
+
+        json.dump(
+            events[-100:],
+            f,
+            ensure_ascii=False,
+            indent=2
+        )
+
+
+# ============================================================
+# DATES
+# ============================================================
+
+def parse_post_datetime(date_text):
+
+    if not date_text:
+        return None
+
+    try:
+
+        dt = datetime.fromisoformat(
+            date_text.replace(
+                "Z",
+                "+00:00"
+            )
+        )
+
+        # On refuse une date sans fuseau :
+        # impossible de garantir la fraîcheur.
+        if dt.tzinfo is None:
+            return None
+
+        return dt.astimezone(
+            timezone.utc
+        )
+
+    except Exception:
+
+        return None
+
+
+def post_age_minutes(post):
+
+    dt = parse_post_datetime(
+        post.get("date", "")
+    )
+
+    if dt is None:
+        return None
+
+    return (
+        datetime.now(timezone.utc) - dt
+    ).total_seconds() / 60
+
+
+def is_flash_recent(
+    post,
+    max_minutes=MAX_POST_AGE_MINUTES
+):
+
+    date_text = post.get(
+        "date",
+        ""
+    )
+
+    age_minutes = post_age_minutes(
+        post
+    )
+
+    if age_minutes is None:
+
+        print(
+            "FRAÎCHEUR REJETÉE | "
+            f"{post.get('channel')} | "
+            f"{post.get('post_id')} | "
+            f"date={date_text} | "
+            "date invalide ou sans fuseau"
+        )
+
+        return False
+
+    print(
+        "FRAÎCHEUR | "
+        f"{post.get('channel')} | "
+        f"{post.get('post_id')} | "
+        f"date={date_text} | "
+        f"age={age_minutes:.1f} min"
+    )
+
+    return (
+        0 <= age_minutes <= max_minutes
+    )
+
+
+# ============================================================
+# NORMALISATION
+# ============================================================
+
+def normalize_words(text):
+
+    text = text.lower()
+
+    text = re.sub(
+        r"https?://\S+",
+        " ",
+        text
+    )
+
+    text = re.sub(
+        r"[^a-z0-9àâçéèêëîïôûùüÿœæ\s]",
+        " ",
+        text
+    )
+
+    return {
+        word
+        for word in text.split()
+        if (
+            len(word) >= 4
+            and word not in STOPWORDS
+        )
+    }
+
+
+# ============================================================
+# DÉTECTION DU TYPE D'ÉVÉNEMENT
+# ============================================================
+
+def detect_event_type(text):
+
+    text = text.lower()
+
+    for event_type, patterns in EVENT_PATTERNS.items():
+
+        for pattern in patterns:
+
+            if pattern in text:
+                return event_type
+
+    return None
+
+
+def detect_location(text):
+
+    text = text.lower()
+
+    for location in LOCATIONS:
+
+        if location in text:
+            return location
+
+    return ""
+
+
+# ============================================================
+# SIGNATURE D'ÉVÉNEMENT
+# ============================================================
+
+def event_signature(post):
+
+    text = post.get(
+        "text",
+        ""
+    )
+
+    event_type = detect_event_type(
+        text
+    )
+
+    location = detect_location(
+        text
+    )
+
+    if not event_type:
+        return ""
+
+    # Le lieu permet d'éviter de considérer
+    # deux événements différents comme identiques.
+    if location:
+
+        return (
+            f"{event_type}|{location}"
+        )
+
+    # Si aucun lieu n'est détecté,
+    # on utilise quelques mots significatifs.
+    words = sorted(
+        normalize_words(text)
+    )
+
+    if words:
+
+        return (
+            f"{event_type}|"
+            + "|".join(words[:5])
+        )
+
+    return event_type
+
+
+# ============================================================
+# ÉVÉNEMENT DÉJÀ ENVOYÉ
+# ============================================================
+
+def event_already_sent(
+    post,
+    events,
+    max_hours=EVENT_MEMORY_HOURS
+):
+
+    current_signature = event_signature(
+        post
+    )
+
+    if not current_signature:
+        return False
+
+    now = datetime.now(
+        timezone.utc
+    )
+
     for old_event in events:
 
-        old_words = set(old_event.get("words", []))
-        new_words = normalize_words(post.get("text", ""))
+        old_signature = old_event.get(
+            "signature",
+            ""
+        )
 
-        if not old_words or not new_words:
+        if (
+            old_signature
+            != current_signature
+        ):
             continue
 
-        common = old_words & new_words
+        old_date = parse_post_datetime(
+            old_event.get(
+                "date",
+                ""
+            )
+        )
 
-        if len(common) >= 5:
+        if old_date is None:
+            continue
+
+        age_hours = (
+            now - old_date
+        ).total_seconds() / 3600
+
+        if (
+            0 <= age_hours <= max_hours
+        ):
+
+            print(
+                "DOUBLON ÉVÉNEMENT | "
+                f"{current_signature} | "
+                f"ancien={age_hours:.1f}h"
+            )
+
             return True
 
     return False
+
+
+# ============================================================
+# RÉCUPÉRATION DES NOUVEAUX POSTS
+# ============================================================
 
 def get_new_posts():
 
@@ -285,11 +780,15 @@ def get_new_posts():
 
     new_posts = []
 
-    first_run = len(seen) == 0
+    first_run = (
+        len(seen) == 0
+    )
 
     for channel in TELEGRAM_CHANNELS:
 
-        username = channel["channel"]
+        username = channel[
+            "channel"
+        ]
 
         url = (
             "https://t.me/s/"
@@ -319,8 +818,13 @@ def get_new_posts():
                 )
 
             parser = TelegramPostParser()
+
             parser.feed(html)
-            print(f"{channel['name']} : {len(parser.posts)} posts bruts détectés")
+
+            print(
+                f"{channel['name']} : "
+                f"{len(parser.posts)} posts bruts détectés"
+            )
 
             for post in parser.posts:
 
@@ -329,23 +833,37 @@ def get_new_posts():
                 )
 
                 if not post_id:
-                    print(f"POST SANS ID : {post.get('text', '')[:80]}")
+
+                    print(
+                        "POST SANS ID : "
+                        + post.get(
+                            "text",
+                            ""
+                        )[:100]
+                    )
+
                     continue
 
                 if post_id in seen:
                     continue
 
-                seen.add(post_id)
+                seen.add(
+                    post_id
+                )
 
                 new_posts.append({
                     "channel":
                         channel["name"],
+
                     "post_id":
                         post_id,
+
                     "text":
                         post["text"],
+
                     "date":
                         post["date"],
+
                     "link":
                         "https://t.me/"
                         + post_id,
@@ -354,45 +872,361 @@ def get_new_posts():
         except Exception as e:
 
             print(
-                f"Erreur {channel['name']}: {e}"
+                f"Erreur "
+                f"{channel['name']}: {e}"
             )
 
-    print(f"Total avant dédoublonnage : {len(new_posts)} nouveaux posts")
+    # IMPORTANT :
+    # sauvegarder même lors du premier lancement.
+    save_seen(
+        seen
+    )
+
+    print(
+        "Total avant filtrage : "
+        f"{len(new_posts)} nouveaux posts"
+    )
 
     if first_run:
-        print("Premier lancement : flux initial mémorisé, aucun FLASH historique envoyé.")
+
+        print(
+            "Premier lancement : "
+            "flux initial mémorisé, "
+            "aucun FLASH historique envoyé."
+        )
+
         return []
-    
-    save_seen(seen)
 
     return new_posts
 
-def shorten_flash_with_gemini(source_text):
+
+# ============================================================
+# FILTRE FLASH
+# ============================================================
+
+def is_flash_candidate(post):
+
+    text = post.get(
+        "text",
+        ""
+    ).lower()
+
+    # --------------------------------------------------------
+    # 1. EXCLUSIONS ABSOLUES
+    # --------------------------------------------------------
+
+    for pattern in EXCLUDED_PATTERNS:
+
+        if pattern in text:
+
+            print(
+                "REJET FILTRE | "
+                f"{post.get('channel')} | "
+                f"{post.get('post_id')} | "
+                f"raison={pattern}"
+            )
+
+            return False
+
+    # --------------------------------------------------------
+    # 2. DÉTECTION DE L'ÉVÉNEMENT
+    # --------------------------------------------------------
+
+    event_type = detect_event_type(
+        text
+    )
+
+    if not event_type:
+
+        print(
+            "REJET FILTRE | "
+            f"{post.get('channel')} | "
+            f"{post.get('post_id')} | "
+            "aucun événement majeur détecté"
+        )
+
+        return False
+
+    # --------------------------------------------------------
+    # 3. CAS PARTICULIER : VICTIMES / MASSACRE
+    # --------------------------------------------------------
+
+    if event_type == "victimes":
+
+        concrete_victim_signal = any(
+            pattern in text
+            for pattern in [
+                "killed",
+                "dead",
+                "deaths",
+                "casualties",
+                "mass shooting",
+            ]
+        )
+
+        if not concrete_victim_signal:
+
+            print(
+                "REJET FILTRE | "
+                f"{post.get('channel')} | "
+                f"{post.get('post_id')} | "
+                "victimes non suffisamment concrètes"
+            )
+
+            return False
+
+    # --------------------------------------------------------
+    # 4. CAS ATTAQUE :
+    #    on veut un événement concret,
+    #    pas simplement le mot "strike"
+    # --------------------------------------------------------
+
+    if event_type == "attaque":
+
+        concrete_attack = any(
+            pattern in text
+            for pattern in [
+                "airstrike",
+                "airstrikes",
+                "air strike",
+                "drone attack",
+                "drone attacks",
+                "drone strike",
+                "drone strikes",
+                "missile attack",
+                "missile strike",
+                "missile strikes",
+                "bombing",
+                "bombed",
+                "explosion",
+                "explosions",
+            ]
+        )
+
+        if not concrete_attack:
+
+            print(
+                "REJET FILTRE | "
+                f"{post.get('channel')} | "
+                f"{post.get('post_id')} | "
+                "attaque opérationnelle/routine"
+            )
+
+            return False
+
+    # --------------------------------------------------------
+    # 5. ÉVITER LES RÉCITS SOCIAUX SANS FAIT CONCRET
+    # --------------------------------------------------------
+
+    narrative_only_patterns = [
+        "posts claim",
+        "social media claims",
+        "social media reports",
+        "publications font état",
+        "reports suggest",
+        "reports claim",
+        "according to posts",
+    ]
+
+    if any(
+        pattern in text
+        for pattern in narrative_only_patterns
+    ):
+
+        # On accepte quand même si le texte contient
+        # un signal concret fort.
+        concrete_signal = any(
+            pattern in text
+            for pattern in [
+                "explosion",
+                "explosions",
+                "killed",
+                "dead",
+                "deaths",
+                "casualties",
+                "earthquake",
+                "plane crash",
+                "aircraft crash",
+                "ceasefire",
+                "coup",
+                "ambassador expelled",
+                "airspace closed",
+            ]
+        )
+
+        if not concrete_signal:
+
+            print(
+                "REJET FILTRE | "
+                f"{post.get('channel')} | "
+                f"{post.get('post_id')} | "
+                "récit non suffisamment concret"
+            )
+
+            return False
+
+    # --------------------------------------------------------
+    # 6. LOCALISATION OU SIGNAL STRATÉGIQUE
+    # --------------------------------------------------------
+
+    location = detect_location(
+        text
+    )
+
+    if not location:
+
+        strong_event = event_type in {
+            "nucleaire",
+            "cessez_le_feu",
+            "diplomatie",
+            "crise_politique",
+            "catastrophe",
+        }
+
+        if not strong_event:
+
+            print(
+                "REJET FILTRE | "
+                f"{post.get('channel')} | "
+                f"{post.get('post_id')} | "
+                "aucun lieu identifiable"
+            )
+
+            return False
+
+    print(
+        "CANDIDAT FLASH | "
+        f"{post.get('channel')} | "
+        f"{post.get('post_id')} | "
+        f"type={event_type} | "
+        f"lieu={location or 'non identifié'}"
+    )
+
+    return True
+
+
+# ============================================================
+# DÉDOUBLONNAGE DES POSTS DU MÊME RUN
+# ============================================================
+
+def same_event(
+    post1,
+    post2
+):
+
+    signature1 = event_signature(
+        post1
+    )
+
+    signature2 = event_signature(
+        post2
+    )
+
+    if (
+        signature1
+        and signature2
+        and signature1 == signature2
+    ):
+
+        return True
+
+    return False
+
+
+# ============================================================
+# SÉLECTION FINALE
+# ============================================================
+
+def select_flash_events(posts):
+
+    candidates = []
+
+    for post in posts:
+
+        if not is_flash_recent(
+            post
+        ):
+            continue
+
+        if not is_flash_candidate(
+            post
+        ):
+            continue
+
+        candidates.append(
+            post
+        )
+
+    print(
+        f"{len(candidates)} candidats "
+        "après filtres."
+    )
+
+    previous_events = load_event_state()
+
+    selected = []
+
+    for post in candidates:
+
+        if event_already_sent(
+            post,
+            previous_events
+        ):
+            continue
+
+        duplicate = False
+
+        for existing in selected:
+
+            if same_event(
+                post,
+                existing
+            ):
+
+                duplicate = True
+                break
+
+        if not duplicate:
+
+            selected.append(
+                post
+            )
+
+    return selected
+
+
+# ============================================================
+# GEMINI : TRADUCTION + CONDENSATION UNIQUEMENT
+# ============================================================
+
+def shorten_flash_with_gemini(
+    source_text
+):
 
     prompt = f"""
-Tu es un traducteur-résumeur pour un flux FLASH géopolitique.
+Tu es uniquement un traducteur-résumeur pour un flux FLASH géopolitique.
 
 SOURCE :
 {source_text}
 
-Consignes STRICTES :
+RÈGLES ABSOLUES :
 
-- Traduis le texte en français.
-- Produis un titre très court de 1 à 4 mots.
-- Le titre doit reprendre uniquement un lieu ou un sujet explicitement présent dans SOURCE.
-- Si aucun lieu ou sujet clair n'est identifiable, utilise exactement : ÉVÉNEMENT
-- Produis ensuite un résumé de 1 ou 2 phrases très courtes.
-- Conserve uniquement les informations explicitement présentes dans SOURCE.
-- N'ajoute absolument aucune information provenant de tes connaissances.
-- Aucun contexte supplémentaire.
-- Aucune analyse.
-- Aucune interprétation.
-- Aucune déduction.
+- Traduis en français.
+- Ne rajoute aucune information.
+- Ne complète aucune information.
+- Ne déduis rien.
+- Ne fais aucune analyse.
+- Ne vérifie pas l'information.
+- Ne donne aucun contexte extérieur.
 - Ne transforme jamais une information incertaine en fait certain.
-- Conserve les nuances telles que "selon", "aurait", "des informations font état de", etc.
-- Si plusieurs informations sont présentes, conserve uniquement l'information principale.
+- Conserve les formulations telles que "selon", "aurait", "des informations font état de", etc.
+- Garde uniquement l'événement principal.
+- Titre de 1 à 4 mots.
+- Résumé de 1 ou 2 phrases très courtes.
+- Le titre doit reprendre uniquement un lieu ou sujet explicitement présent dans SOURCE.
+- Si aucun lieu ou sujet clair n'est présent, utilise exactement : ÉVÉNEMENT
 
-Réponds EXACTEMENT sous cette forme :
+Réponds EXACTEMENT :
 
 TITRE: [titre]
 RESUME: [résumé]
@@ -417,16 +1251,20 @@ Aucun autre texte.
     }
 
     url = (
-        "https://generativelanguage.googleapis.com/v1beta/models/"
+        "https://generativelanguage.googleapis.com/"
+        "v1beta/models/"
         "gemini-3.5-flash-lite:generateContent?key="
         + GEMINI_API_KEY
     )
 
     request = urllib.request.Request(
         url,
-        data=json.dumps(payload).encode("utf-8"),
+        data=json.dumps(
+            payload
+        ).encode("utf-8"),
         headers={
-            "Content-Type": "application/json"
+            "Content-Type":
+                "application/json"
         },
         method="POST"
     )
@@ -439,7 +1277,9 @@ Aucun autre texte.
         ) as response:
 
             result = json.loads(
-                response.read().decode("utf-8")
+                response.read().decode(
+                    "utf-8"
+                )
             )
 
         text = (
@@ -458,17 +1298,21 @@ Aucun autre texte.
             text
         )
 
-        if not title_match or not summary_match:
+        if (
+            not title_match
+            or not summary_match
+        ):
+
             raise ValueError(
                 "Format Gemini FLASH inattendu"
             )
 
-        title = title_match.group(1).strip()
-        summary = summary_match.group(1).strip()
-
         return {
-            "title": title,
-            "summary": summary
+            "title":
+                title_match.group(1).strip(),
+
+            "summary":
+                summary_match.group(1).strip(),
         }
 
     except Exception as e:
@@ -479,22 +1323,43 @@ Aucun autre texte.
         )
 
         return {
-            "title": "ÉVÉNEMENT",
-            "summary": source_text
+            "title":
+                "ÉVÉNEMENT",
+
+            "summary":
+                source_text,
         }
-def format_flash_time(date_string):
+
+
+# ============================================================
+# HEURE AFFICHÉE
+# ============================================================
+
+def format_flash_time(
+    date_string
+):
+
     try:
-        dt = datetime.fromisoformat(
-            date_string.replace("Z", "+00:00")
+
+        dt = parse_post_datetime(
+            date_string
         )
 
-        if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
+        if dt is None:
+            return date_string
 
-        return dt.astimezone().strftime("%H:%M")
+        return dt.astimezone().strftime(
+            "%H:%M"
+        )
 
     except Exception:
+
         return date_string
+
+
+# ============================================================
+# ENVOI TELEGRAM
+# ============================================================
 
 def send_flash(post):
 
@@ -516,15 +1381,22 @@ def send_flash(post):
     )
 
     url = (
-        f"https://api.telegram.org/bot"
+        "https://api.telegram.org/bot"
         f"{TELEGRAM_BOT_TOKEN}/sendMessage"
     )
 
     data = urllib.parse.urlencode({
-        "chat_id": TELEGRAM_CHAT_ID,
-        "text": text,
-        "parse_mode": "HTML",
-        "disable_web_page_preview": "true"
+        "chat_id":
+            TELEGRAM_CHAT_ID,
+
+        "text":
+            text,
+
+        "parse_mode":
+            "HTML",
+
+        "disable_web_page_preview":
+            "true",
     }).encode("utf-8")
 
     request = urllib.request.Request(
@@ -542,17 +1414,40 @@ def send_flash(post):
 
             response.read()
 
-            # Mémoriser l'événement seulement après un envoi Telegram réussi
+        # ----------------------------------------------------
+        # IMPORTANT :
+        # l'événement n'est mémorisé qu'après
+        # un envoi Telegram réussi.
+        # ----------------------------------------------------
+
         events = load_event_state()
 
         events.append({
-            "words": list(normalize_words(post.get("text", ""))),
-            "date": post.get("date", ""),
-            "channel": post.get("channel", ""),
-            "post_id": post.get("post_id", "")
+            "signature":
+                event_signature(post),
+
+            "date":
+                post.get(
+                    "date",
+                    ""
+                ),
+
+            "channel":
+                post.get(
+                    "channel",
+                    ""
+                ),
+
+            "post_id":
+                post.get(
+                    "post_id",
+                    ""
+                ),
         })
 
-        save_event_state(events)
+        save_event_state(
+            events
+        )
 
         print(
             "FLASH envoyé :",
@@ -573,242 +1468,35 @@ def send_flash(post):
         )
 
         raise
-def normalize_words(text):
-    text = text.lower()
-    text = re.sub(r"https?://\S+", " ", text)
-    text = re.sub(r"[^a-z0-9àâçéèêëîïôûùüÿœæ\s]", " ", text)
-
-    words = {
-        word
-        for word in text.split()
-        if len(word) >= 4 and word not in STOPWORDS
-    }
-
-    return words
-
-def is_flash_recent(post, max_minutes=30):
-    date_text = post.get("date", "")
-
-    if not date_text:
-        return False
-
-    try:
-        dt = datetime.fromisoformat(
-            date_text.replace("Z", "+00:00")
-        )
-
-        if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
-
-        age_minutes = (
-            datetime.now(timezone.utc) - dt
-        ).total_seconds() / 60
-
-        return 0 <= age_minutes <= max_minutes
-
-    except Exception:
-        return False
-
-def is_flash_candidate(post):
-    text = post.get("text", "").lower()
-
-        # Exclure les informations industrielles, contractuelles
-    # et les annonces d'armement qui ne constituent pas un événement.
-    excluded_keywords = [
-        "contract",
-        "awarded",
-        "award",
-        "procurement",
-        "production contract",
-        "production of",
-        "million contract",
-        "billion contract",
-        "worth $",
-        "worth €",
-        "program",
-        "programme",
-        "development",
-        "developed",
-        "facility",
-        "megawatts",
-        "mw",
-        "power plant",
-        "nuclear power plant",
-    ]
-
-    if any(keyword in text for keyword in excluded_keywords):
-        return False
-
-    # Événements militaires / sécuritaires
-    military_keywords = [
-        "airstrike", "airstrikes",
-        "missile", "missiles",
-        "drone attack", "drone strike", "drone strikes",
-        "explosion", "explosions",
-        "attack", "attacks", "attacked",
-        "strike", "strikes", "struck",
-        "killed", "dead", "deaths", "casualties",
-        "invasion", "invaded",
-        "intercepted", "interception",
-        "hostage", "hostages",
-    ]
-
-    # Crises politiques / diplomatiques
-    political_keywords = [
-        "coup", "coup attempt",
-        "resigns", "resigned", "resignation",
-        "impeachment",
-        "government collapses", "government collapsed",
-        "declares emergency", "state of emergency",
-        "martial law",
-        "mobilization", "mobilisation",
-        "ceasefire", "truce",
-        "peace deal", "peace agreement",
-        "breaks diplomatic relations",
-        "diplomatic relations",
-        "ambassador expelled",
-        "expels ambassador",
-        "sanctions",
-        "sanctioned",
-        "election crisis",
-        "protests", "protesters",
-        "mass protest",
-        "riot", "riots",
-    ]
-
-    # Catastrophes / événements majeurs
-    disaster_keywords = [
-        "earthquake", "tsunami",
-        "hurricane", "typhoon",
-        "tornado",
-        "flood", "flooding",
-        "wildfire",
-        "volcanic eruption",
-        "plane crash", "aircraft crash",
-        "train crash",
-        "major accident",
-    ]
-
-    # Enjeu stratégique exceptionnel
-    strategic_keywords = [
-        "nuclear test",
-        "nuclear attack",
-        "nuclear strike",
-        "nuclear threat",
-        "nuclear weapon",
-        "nuclear weapons",
-        "radiation leak",
-        "reactor accident",
-    ]
-
-    all_keywords = (
-        military_keywords
-        + political_keywords
-        + disaster_keywords
-        + strategic_keywords
-    )
-
-    return any(keyword in text for keyword in all_keywords)
 
 
-def same_event(post1, post2):
-
-    text1 = post1.get("text", "").lower()
-    text2 = post2.get("text", "").lower()
-
-    words1 = normalize_words(text1)
-    words2 = normalize_words(text2)
-
-    if not words1 or not words2:
-        return False
-
-    common = words1 & words2
-
-    # Même lieu clairement mentionné
-    locations = [
-        "kyiv", "kiev", "moscow", "moscou",
-        "odesa", "odessa",
-        "kharkiv", "kherson",
-        "zaporizhzhia", "zaporizhzhia",
-        "donetsk", "luhansk",
-        "gaza", "lebanon", "liban",
-        "beirut", "beyrouth",
-        "syria", "syrie",
-        "yemen", "yémen",
-        "iran", "israel", "israël",
-        "iraq", "irak",
-        "russia", "russie",
-        "ukraine",
-        "durban",
-        "oufa", "ufa",
-        "kouïbychev", "kuibyshev",
-    ]
-
-    shared_locations = [
-        location
-        for location in locations
-        if location in text1 and location in text2
-    ]
-
-    if shared_locations and len(common) >= 2:
-        return True
-
-    # Même événement avec beaucoup de vocabulaire commun
-    if len(common) >= 5:
-        return True
-
-    # Messages courts mais très proches
-    if len(common) >= 3:
-        smaller = min(len(words1), len(words2))
-
-        if smaller <= 10:
-            return True
-
-    return False
-def select_flash_events(posts):
-
-    candidates = [
-        post for post in posts
-        if is_flash_recent(post)
-        and is_flash_candidate(post)
-    ]
-
-    previous_events = load_event_state()
-
-    candidates = [
-        post for post in candidates
-        if not event_already_sent(post, previous_events)
-    ]
-
-    selected = []
-
-    for post in candidates:
-
-        duplicate = False
-
-        for existing in selected:
-
-            if same_event(post, existing):
-                duplicate = True
-                break
-
-        if not duplicate:
-            selected.append(post)
-
-    return selected
+# ============================================================
+# MAIN
+# ============================================================
 
 def main():
+
     posts = get_new_posts()
 
-    print(f"{len(posts)} nouveaux posts détectés.")
+    print(
+        f"{len(posts)} nouveaux posts détectés."
+    )
 
-    flash_events = select_flash_events(posts)
+    flash_events = select_flash_events(
+        posts
+    )
 
-    print(f"{len(flash_events)} événements FLASH retenus.")
+    print(
+        f"{len(flash_events)} événements "
+        "FLASH retenus."
+    )
 
     for post in flash_events:
-        send_flash(post)
-        print("FLASH envoyé :", post["channel"], post["post_id"])
+
+        send_flash(
+            post
+        )
+
 
 if __name__ == "__main__":
 
