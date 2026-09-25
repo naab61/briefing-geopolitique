@@ -783,5 +783,45 @@
     "sources": [
       "GDELT Events"
     ]
+  },
+  {
+    "fingerprint": "10074674|french|military|personnel",
+    "date": "2026-09-25T10:30:00+00:00",
+    "score": 26,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "797156|arabia|gaza|iran|israel|israeli|kingdom|military|muslim|nations|saudi|states|united|york",
+    "date": "2026-09-25T10:30:00+00:00",
+    "score": 25,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "531871|governor|house|jersey|lieutenant|member|staff|states|united|white",
+    "date": "2026-09-25T10:30:00+00:00",
+    "score": 25,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "531871|administration|washington",
+    "date": "2026-09-25T10:30:00+00:00",
+    "score": 25,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "1153951|congress|newspaper|romania|romanian|states|united",
+    "date": "2026-09-25T10:30:00+00:00",
+    "score": 19,
+    "sources": [
+      "GDELT Events"
+    ]
   }
 ]
