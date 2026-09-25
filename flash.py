@@ -341,11 +341,19 @@ def read_gdelt_events():
                 if age is None:
                     continue
 
+                # Le runner GitHub peut avoir quelques minutes d'écart
+                # avec l'horodatage de publication GDELT. Un événement
+                # légèrement "dans le futur" doit donc rester exploitable.
+                if age < 0:
+                    if age < -15:
+                        continue
+                    age = 0
+
                 if newest_age is None or age < newest_age:
                     newest_age = age
                     newest_added = added
 
-                if age < 0 or age > MAX_EVENT_AGE_MINUTES:
+                if age > MAX_EVENT_AGE_MINUTES:
                     continue
 
                 try:
@@ -404,7 +412,7 @@ def read_gdelt_events():
         )
     else:
         print(
-            "GDELT diagnostic: aucune DATEADDED exploitable dans le fichier."
+            "GDELT diagnostic: aucun événement temporel exploitable dans le fichier."
         )
 
     return events
@@ -777,7 +785,7 @@ def select_flash_clusters(clusters):
             gdelt_sources >= 2
             or len(telegram_sources) >= 2
             or gdelt_mentions >= 10
-            or len(telegram_events) >= 3
+            or len(telegram_events) >= 2
             or (
                 len(telegram_events) >= 2
                 and len(telegram_sources) == 1
