@@ -543,5 +543,45 @@
     "sources": [
       "GDELT Events"
     ]
+  },
+  {
+    "fingerprint": "1588624|1603135|australia|police|worker",
+    "date": "2026-09-25T09:15:00+00:00",
+    "score": 31,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "kingdom|representatives|united",
+    "date": "2026-09-25T09:15:00+00:00",
+    "score": 31,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "1603135|albanese|anthony|australia|judge|sydney",
+    "date": "2026-09-25T09:15:00+00:00",
+    "score": 25,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "protester",
+    "date": "2026-09-25T09:15:00+00:00",
+    "score": 25,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "1456928|associated|european|firefighter|officer|paris|police|pope|press",
+    "date": "2026-09-25T09:15:00+00:00",
+    "score": 25,
+    "sources": [
+      "GDELT Events"
+    ]
   }
 ]
