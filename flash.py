@@ -36,7 +36,7 @@ EVENT_FILE = "flash_events.json"
 GDELT_FILE = "flash_gdelt_seen.json"
 
 MAX_TELEGRAM_AGE_MINUTES = 30
-MAX_EVENT_AGE_MINUTES = 45
+MAX_EVENT_AGE_MINUTES = 180
 EVENT_MEMORY_HOURS = 12
 
 TELEGRAM_CHANNELS = [
@@ -325,6 +325,18 @@ def read_gdelt_events():
                     row[GDELT["date_added"]]
                 )
 
+                # DATEADDED peut être vide. Dans ce cas, on utilise
+                # l'horodatage du nom du fichier GDELT.
+                if added is None:
+                    export_match = re.search(
+                        r"(\d{14})\.export\.CSV\.zip$",
+                        url
+                    )
+                    if export_match:
+                        added = parse_gdelt_date(
+                            export_match.group(1)
+                        )
+
                 age = age_minutes(added)
                 if age is None:
                     continue
@@ -333,7 +345,6 @@ def read_gdelt_events():
                     newest_age = age
                     newest_added = added
 
-                # On ne garde que le battement récent.
                 if age < 0 or age > MAX_EVENT_AGE_MINUTES:
                     continue
 
@@ -767,6 +778,19 @@ def select_flash_clusters(clusters):
             or len(telegram_sources) >= 2
             or gdelt_mentions >= 10
             or len(telegram_events) >= 3
+            or (
+                len(telegram_events) >= 2
+                and len(telegram_sources) == 1
+                and all(
+                    age_minutes(
+                        parse_iso_date(x.get("date", ""))
+                    ) is not None
+                    and age_minutes(
+                        parse_iso_date(x.get("date", ""))
+                    ) <= 15
+                    for x in telegram_events
+                )
+            )
         )
 
         print(
