@@ -663,5 +663,45 @@
     "sources": [
       "GDELT Events"
     ]
+  },
+  {
+    "fingerprint": "1448038|city|lake|residents|salt|states|united|utah|voter|worker",
+    "date": "2026-09-25T09:45:00+00:00",
+    "score": 25,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "catholic",
+    "date": "2026-09-25T09:45:00+00:00",
+    "score": 25,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "philippine",
+    "date": "2026-09-25T09:45:00+00:00",
+    "score": 20,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "2094230|leader|party|police",
+    "date": "2026-09-25T09:45:00+00:00",
+    "score": 19,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "2591658|pupil|school",
+    "date": "2026-09-25T09:45:00+00:00",
+    "score": 19,
+    "sources": [
+      "GDELT Events"
+    ]
   }
 ]
