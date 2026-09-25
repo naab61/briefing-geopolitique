@@ -1477,5 +1477,31 @@
     "sources": [
       "bignewsnetwork.com"
     ]
+  },
+  {
+    "fingerprint": "missouri|backed|close|comment|congressional|court|effort|elections|facebook|friday|icon|midterm|missouri|november|rejected|rejects|search|share|story|supreme|trump|twitter|user",
+    "identity": "MISSOURI   2 Supreme Court rejects Trump-backed Missouri congressional map Close Search Search User Icon Comment on this story Share story facebook icon twitter icon — The Supreme Court on Friday rejected a GOP effort to use a new Missouri congressional map in November's midterm elections.",
+    "actors": "MISSOURI",
+    "country": "États-Unis",
+    "title": "États-Unis : La Cour suprême rejette une carte électorale du Missouri",
+    "summary": "La Cour suprême américaine a rejeté vendredi une tentative républicaine d'utiliser une nouvelle carte électorale au Missouri pour les prochaines élections de mi-mandat. Cette décision a un impact politique direct sur le tracé des circonscriptions et le processus électoral.",
+    "date": "2026-09-26T00:00:00+00:00",
+    "score": 35,
+    "sources": [
+      "wlos.com"
+    ]
+  },
+  {
+    "fingerprint": "court|missouri|supreme|1200|alien|allows|antonio|court|entitlements|first|gets|missouri|news|order|program|radio|save|scotus|states|summit|supreme|systematic|trump|verification|woai|wraps",
+    "identity": "SUPREME COURT MISSOURI MO 2 Trump Wraps-Up Summit with Xi, Gets Big Win From Supreme Court | News Radio 1200 WOAI | San Antonio's First News — The SCOTUS order allows states to use DHS' Systematic Alien Verification for Entitlements (SAVE) program",
+    "actors": "SUPREME COURT MISSOURI",
+    "country": "États-Unis",
+    "title": "États-Unis : La Cour suprême donne raison au Missouri sur le programme SAVE",
+    "summary": "La Cour suprême des États-Unis autorise les États à utiliser le programme fédéral SAVE du Département de la Sécurité intérieure, marquant une victoire juridique pour le Missouri.",
+    "date": "2026-09-26T00:00:00+00:00",
+    "score": 35,
+    "sources": [
+      "woai.iheart.com"
+    ]
   }
 ]
