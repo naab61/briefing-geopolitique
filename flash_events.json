@@ -1269,5 +1269,31 @@
     "sources": [
       "idahostatejournal.com"
     ]
+  },
+  {
+    "fingerprint": "court|district|government|allowing|checks|citizens|citizenship|controversial|court|data|district|erroneously|federal|flagged|found|government|lower|officials|overhauled|privacy|protections|revives|supreme|system|trump|violated",
+    "identity": "DISTRICT COURT GOVERNMENT TX 2 The Supreme Court revives a controversial data system for citizenship checks — The Supreme Court is allowing use of a data system that Trump officials overhauled. The system has erroneously flagged U.S. citizens and a lower court found it violated federal privacy protections.",
+    "actors": "DISTRICT COURT GOVERNMENT",
+    "country": "Texas, États-Unis",
+    "title": "États-Unis : La Cour suprême valide un système controversé de vérification de la citoyenneté",
+    "summary": "La Cour suprême américaine autorise l'utilisation d'un système de données de contrôle de la citoyenneté hérité de l'ère Trump, malgré des accusations d'erreurs ciblant des citoyens américains et de violations de la vie privée.",
+    "date": "2026-09-25T17:00:00+00:00",
+    "score": 35,
+    "sources": [
+      "kpcw.org"
+    ]
+  },
+  {
+    "fingerprint": "britain|companies|israel|israeli|palestinian|added|adds|alleged|bank|blacklist|britain|business|companies|human|involvement|israel|israeli|more|office|palestinian|rights|settlements|through|ties|violating|violations|west",
+    "identity": "BRITAIN PALESTINIAN FR 1 UN adds 61 companies to settlements blacklist over alleged Palestinian rights violations — The U.N. human rights office has added 61 more companies to a blacklist for alleged involvement in violating Palestinian rights through business ties to Israeli settlements in the West Bank. BRITAIN ISRAELI IS 1 UN adds 61 companies to settlements blacklist over alleged Palestinian rights violations — The U.N. human rights office has added 61 more companies to a blacklist for alleged involvement in violating Palestinian rights through business ties to Israeli settlements in the West Bank. COMPANIES PALESTINIAN IS 1 UN adds 61 companies to settlements blacklist over alleged Palestinian rights violations — The U.N. human rights office has added 61 more companies to a blacklist for alleged involvement in violating Palestinian rights through business ties to Israeli settlements in the West Bank. BRITAIN ISRAELI IS 1 UN adds 61 companies to settlements blacklist over alleged Palestinian rights violations — The U.N. human rights office has added 61 more companies to a blacklist for alleged involvement in violating Palestinian rights through business ties to Israeli settlements in the West Bank. COMPANIES ISRAEL IS 1 UN adds 61 companies to settlements blacklist over alleged Palestinian rights violations — The U.N. human rights office has added 61 more companies to a blacklist for alleged involvement in violating Palestinian rights through business ties to Israeli settlements in the West Bank. COMPANIES ISRAEL UK 1 UN adds 61 companies to settlements blacklist over alleged Palestinian rights violations — The U.N. human rights office has added 61 more companies to a blacklist for alleged involvement in violating Palestinian rights through business ties to Israeli settlements in the West Bank.",
+    "actors": "BRITAIN PALESTINIAN BRITAIN ISRAELI COMPANIES PALESTINIAN BRITAIN ISRAELI COMPANIES ISRAEL COMPANIES ISRAEL",
+    "country": "Israël / Territoires palestiniens",
+    "title": "ONU : 61 nouvelles entreprises sur la liste noire des colonies",
+    "summary": "Le bureau des droits de l'homme de l'ONU a ajouté 61 entreprises supplémentaires à sa liste noire en raison de leurs liens commerciaux avec les colonies israéliennes en Cisjordanie, jugés contraires aux droits des Palestiniens.",
+    "date": "2026-09-25T17:00:00+00:00",
+    "score": 31,
+    "sources": [
+      "clickorlando.com"
+    ]
   }
 ]
