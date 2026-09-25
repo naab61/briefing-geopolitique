@@ -1217,5 +1217,31 @@
     "sources": [
       "kawc.org"
     ]
+  },
+  {
+    "fingerprint": "administration|appeals|court|district|missouri|states|supreme|united|1384012|administration|allowing|allows|appeals|check|controversial|court|database|district|elections|eligibility|federal|missouri|november|resume|save|states|supreme|tool|trump|united",
+    "identity": "APPEALS COURT ADMINISTRATION 1384012 3 Supreme Court allows Trump to use SAVE voter database - WVTM — The Supreme Court is allowing states to resume using a controversial federal tool to check voter eligibility before the November elections. APPEALS COURT   3 Supreme Court allows Trump to use SAVE voter database - WVTM — The Supreme Court is allowing states to resume using a controversial federal tool to check voter eligibility before the November elections. SUPREME COURT MISSOURI MO 2 Supreme Court allows Trump to use SAVE voter database - WVTM — The Supreme Court is allowing states to resume using a controversial federal tool to check voter eligibility before the November elections. MISSOURI SUPREME COURT MO 2 Supreme Court allows Trump to use SAVE voter database - WVTM — The Supreme Court is allowing states to resume using a controversial federal tool to check voter eligibility before the November elections. SUPREME COURT   2 Supreme Court allows Trump to use SAVE voter database - WVTM — The Supreme Court is allowing states to resume using a controversial federal tool to check voter eligibility before the November elections. DISTRICT COURT DISTRICT COURT MO 2 Supreme Court allows Trump to use SAVE voter database - WVTM — The Supreme Court is allowing states to resume using a controversial federal tool to check voter eligibility before the November elections. UNITED STATES   3 Supreme Court allows Trump to use SAVE voter database - WVTM — The Supreme Court is allowing states to resume using a controversial federal tool to check voter eligibility before the November elections. SUPREME COURT UNITED STATES MO 2 Supreme Court allows Trump to use SAVE voter database - WVTM — The Supreme Court is allowing states to resume using a controversial federal tool to check voter eligibility before the November elections.",
+    "actors": "APPEALS COURT ADMINISTRATION APPEALS COURT SUPREME COURT MISSOURI MISSOURI SUPREME COURT SUPREME COURT DISTRICT COURT DISTRICT COURT UNITED STATES SUPREME COURT UNITED STATES",
+    "country": "États-Unis",
+    "title": "États-Unis : La Cour suprême valide l'usage de la base de données SAVE",
+    "summary": "La Cour suprême autorise les États américains à utiliser l'outil fédéral de vérification de l'éligibilité des électeurs avant les élections de novembre.",
+    "date": "2026-09-25T16:15:00+00:00",
+    "score": 35,
+    "sources": [
+      "wvtm13.com"
+    ]
+  },
+  {
+    "fingerprint": "authorities|brigade|fire|reuters|814876|athens|authorities|blast|brigade|building|capital|causing|central|collapse|daily|district|fells|fire|five|greek|injuring|missing|orange|plaka|reuters|shaken|three|western",
+    "identity": " AUTHORITIES -814876 4 Five missing after blast fells central Athens building | Central Western Daily | Orange, NSW — A blast has shaken the Greek capital's district of Plaka, causing a building to collapse and injuring three...  AUTHORITIES AS 1 Five missing after blast fells central Athens building | Central Western Daily | Orange, NSW — A blast has shaken the Greek capital's district of Plaka, causing a building to collapse and injuring three... FIRE BRIGADE REUTERS -814876 4 Five missing after blast fells central Athens building | Central Western Daily | Orange, NSW — A blast has shaken the Greek capital's district of Plaka, causing a building to collapse and injuring three... FIRE BRIGADE REUTERS -814876 4 Five missing after blast fells central Athens building | Central Western Daily | Orange, NSW — A blast has shaken the Greek capital's district of Plaka, causing a building to collapse and injuring three... FIRE BRIGADE REUTERS AS 1 Five missing after blast fells central Athens building | Central Western Daily | Orange, NSW — A blast has shaken the Greek capital's district of Plaka, causing a building to collapse and injuring three... FIRE BRIGADE REUTERS AS 4 Five missing after blast fells central Athens building | Central Western Daily | Orange, NSW — A blast has shaken the Greek capital's district of Plaka, causing a building to collapse and injuring three...",
+    "actors": "AUTHORITIES AUTHORITIES FIRE BRIGADE REUTERS FIRE BRIGADE REUTERS FIRE BRIGADE REUTERS FIRE BRIGADE REUTERS",
+    "country": "Grèce",
+    "title": "Explosion et effondrement d'un immeuble à Athènes",
+    "summary": "Une puissante explosion a secoué le quartier historique de Plaka à Athènes, provoquant l'effondrement d'un bâtiment, faisant au moins trois blessés et laissant cinq personnes portées disparues.",
+    "date": "2026-09-25T16:15:00+00:00",
+    "score": 31,
+    "sources": [
+      "centralwesterndaily.com.au"
+    ]
   }
 ]
