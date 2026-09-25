@@ -12,7 +12,7 @@ from datetime import datetime, timezone, timedelta
 from zoneinfo import ZoneInfo
 
 # ============================================================
-# FLASH RADAR — VERSION "TREND V7 — SOURCES CANONIQUES"
+# FLASH RADAR — VERSION "TREND V8 — PROPAGATION GDELT CORRIGEE"
 # ============================================================
 # Principe:
 #   - aucune liste de mots-clés pour décider qu'un FLASH existe
@@ -671,14 +671,17 @@ def cluster_score(cluster):
 
     score = 0
 
-    # Propagation multi-source.
+    # Propagation multi-source explicite (Telegram / autres signaux).
     score += min(source_count, 5) * 3
 
-    # Propagation GDELT mesurée.
+    # Propagation GDELT mesurée : NumSources est le nombre de médias
+    # distincts ayant mentionné l'événement dans la fenêtre de 15 min.
     if gdelt_sources >= 2:
         score += 6
     if gdelt_sources >= 3:
         score += 6
+    if gdelt_sources >= 5:
+        score += 4
     if mentions >= 5:
         score += 3
     if mentions >= 10:
@@ -891,7 +894,20 @@ def select_flash_clusters(clusters):
 
         # Une reprise d'agence ne compte donc jamais comme un domaine
         # indépendant supplémentaire.
-        gdelt_sources = len(canonical_sources)
+        # IMPORTANT : dans GDELT Events, NumSources (champ "sources")
+        # est déjà le nombre de sources distinctes ayant mentionné cet
+        # événement pendant la fenêtre de 15 minutes. On ne doit donc pas
+        # compter seulement les lignes GDELT présentes dans notre cluster.
+        # Une seule ligne GDELT peut représenter 2, 10 ou 20 médias distincts.
+        gdelt_coverage_sources = max(
+            [x.get("sources", 0) for x in signals if x["kind"] == "gdelt"],
+            default=0
+        )
+
+        gdelt_articles = max(
+            [x.get("articles", 0) for x in signals if x["kind"] == "gdelt"],
+            default=0
+        )
 
         gdelt_mentions = max(
             [
@@ -902,15 +918,22 @@ def select_flash_clusters(clusters):
             default=0
         )
 
+        # Sources canoniques connues explicitement par nos signaux.
+        # Elles sont utiles pour l'affichage, mais ne remplacent PAS
+        # NumSources pour mesurer la couverture GDELT.
+        gdelt_canonical_sources = len(canonical_sources)
+
         # Un FLASH doit montrer une propagation réelle.
-        # Trois formes sont acceptées :
-        #   1) plusieurs canaux sociaux indépendants ;
-        #   2) propagation GDELT mesurable ;
-        #   3) plusieurs posts sociaux concordants, même sur un seul canal.
+        # NumSources est ici le meilleur indicateur disponible dans le
+        # fichier Events : il compte les sources distinctes, contrairement
+        # à NumMentions qui mesure les mentions/documents.
         propagated = (
-            gdelt_sources >= 2
+            gdelt_coverage_sources >= 3
+            or (
+                gdelt_coverage_sources >= 2
+                and gdelt_articles >= 2
+            )
             or len(telegram_sources) >= 2
-            or gdelt_mentions >= 20
             or len(telegram_events) >= 3
             or (
                 len(telegram_events) >= 2
@@ -935,21 +958,23 @@ def select_flash_clusters(clusters):
             "| canaux=",
             len(telegram_sources),
             "| GDELT sources=",
-            gdelt_sources,
+            gdelt_coverage_sources,
+            "| GDELT articles=",
+            gdelt_articles,
             "| mentions=",
             gdelt_mentions,
             "| propagated=",
             propagated
         )
 
-        # Un cluster composé uniquement d'une ligne GDELT ne suffit jamais.
-        gdelt_valid_links = {
-            str(x.get("link") or "").strip()
-            for x in valid_gdelt
-            if str(x.get("link") or "").startswith(("http://", "https://"))
-        }
-        if not telegram_events and len(gdelt_valid_links) < 2 and gdelt_sources < 2:
-            print("  -> REJET: pas de sources indépendantes suffisantes")
+        # Une seule ligne GDELT peut parfaitement représenter plusieurs
+        # médias indépendants : on ne rejette donc plus sur le simple
+        # nombre de liens GDELT présents dans le cluster.
+        if (
+            not telegram_events
+            and gdelt_coverage_sources < 2
+        ):
+            print("  -> REJET: une seule source GDELT")
             continue
 
         if cluster["score"] < 16:
