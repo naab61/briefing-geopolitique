@@ -823,5 +823,45 @@
     "sources": [
       "GDELT Events"
     ]
+  },
+  {
+    "fingerprint": "797156|gaza|israel|israeli",
+    "date": "2026-09-25T10:30:00+00:00",
+    "score": 25,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "arabia|kingdom|saudi",
+    "date": "2026-09-25T10:30:00+00:00",
+    "score": 25,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "1148793|1149376|bank|belize|central|mayor|prison",
+    "date": "2026-09-25T10:30:00+00:00",
+    "score": 19,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "website",
+    "date": "2026-09-25T10:30:00+00:00",
+    "score": 19,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "cochin|netherland",
+    "date": "2026-09-25T10:30:00+00:00",
+    "score": 19,
+    "sources": [
+      "GDELT Events"
+    ]
   }
 ]
