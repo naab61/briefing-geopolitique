@@ -743,5 +743,45 @@
     "sources": [
       "GDELT Events"
     ]
+  },
+  {
+    "fingerprint": "1456928|france|french|jersey|journalist|pope",
+    "date": "2026-09-25T10:15:00+00:00",
+    "score": 31,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "10074674|3093009|531871|agency|gunmen|intelligence|iran|news|pirate|prison|saudi|states|unidentified|united",
+    "date": "2026-09-25T10:15:00+00:00",
+    "score": 31,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "2762812|531871|council|iranian|national|security|states|united",
+    "date": "2026-09-25T10:15:00+00:00",
+    "score": 31,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "1907161|3093009|intelligence|iran|prison",
+    "date": "2026-09-25T10:15:00+00:00",
+    "score": 31,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "3069644|iran|prison",
+    "date": "2026-09-25T10:15:00+00:00",
+    "score": 26,
+    "sources": [
+      "GDELT Events"
+    ]
   }
 ]
