@@ -9,6 +9,7 @@ import urllib.error
 import zipfile
 from html.parser import HTMLParser
 from datetime import datetime, timezone, timedelta
+from zoneinfo import ZoneInfo
 
 # ============================================================
 # FLASH RADAR — VERSION "TREND"
@@ -630,28 +631,42 @@ def cluster_score(cluster):
 
 def same_cluster(a, b):
     # Le clustering ne cherche pas un mot-clé.
-    # Il cherche si deux signaux décrivent suffisamment le même objet.
+    # Il cherche si deux signaux décrivent suffisamment le même événement.
+    # Un même lien source est un indicateur très fort : on fusionne immédiatement.
+    link_a = str(a.get("link", "")).strip()
+    link_b = str(b.get("link", "")).strip()
+    if link_a and link_b and link_a == link_b:
+        return True
+
     ta = event_text(a)
     tb = event_text(b)
-
     sim = similarity(ta, tb)
 
     if sim >= 0.34:
         return True
 
-    # Un signal GDELT peut être rapproché d'un post Telegram
-    # si le lieu / acteurs principaux sont communs.
-    location_a = (
-        a.get("location")
-        or a.get("country")
-        or ""
-    ).lower()
+    # Les contextes éditoriaux (titre + description de la source) sont
+    # beaucoup plus utiles que les seuls codes/acteurs GDELT pour fusionner
+    # plusieurs lignes qui décrivent le même événement.
+    ca = a.get("context", "")
+    cb = b.get("context", "")
+    if ca and cb and similarity(ca, cb) >= 0.28:
+        return True
 
-    location_b = (
-        b.get("location")
-        or b.get("country")
-        or ""
-    ).lower()
+    # Même personne/acteur distinctif + même pays : seuil plus souple.
+    actors_a = normalize_words(" ".join([a.get("actor1", ""), a.get("actor2", "")]))
+    actors_b = normalize_words(" ".join([b.get("actor1", ""), b.get("actor2", "")]))
+    shared_actors = actors_a & actors_b
+    if shared_actors and len(shared_actors) >= 1:
+        country_a = (a.get("country") or "").lower()
+        country_b = (b.get("country") or "").lower()
+        if country_a and country_b and country_a == country_b:
+            return sim >= 0.12 or bool(ca and cb and similarity(ca, cb) >= 0.12)
+
+    # Un signal GDELT peut être rapproché d'un post Telegram
+    # si le lieu / pays est explicitement commun.
+    location_a = (a.get("location") or a.get("country") or "").lower()
+    location_b = (b.get("location") or b.get("country") or "").lower()
 
     if location_a and location_b:
         if location_a in tb.lower() or location_b in ta.lower():
@@ -816,7 +831,7 @@ def select_flash_clusters(clusters):
             propagated
         )
 
-        if cluster["score"] < 10:
+        if cluster["score"] < 14:
             print("  -> REJET: score trop faible")
             continue
 
@@ -833,10 +848,23 @@ def select_flash_clusters(clusters):
         cluster["fingerprint"] = fingerprint
         selected.append(cluster)
 
-        if len(selected) >= 5:
+        if len(selected) >= 3:
             break
 
-    return selected
+    # Défense supplémentaire : même après le clustering, deux clusters
+    # quasi identiques ne doivent jamais produire deux FLASH consécutifs.
+    deduped = []
+    for candidate in selected:
+        candidate_text = event_text(candidate["signals"][0])
+        if any(
+            similarity(candidate_text, event_text(existing["signals"][0])) >= 0.55
+            for existing in deduped
+        ):
+            print("  -> REJET: cluster quasi identique à un FLASH déjà retenu")
+            continue
+        deduped.append(candidate)
+
+    return deduped
 
 
 def make_cluster_fingerprint(cluster):
@@ -882,8 +910,12 @@ RÈGLES ABSOLUES :
 - Ne transforme jamais une information incertaine en fait certain.
 - Conserve "selon", "aurait", "des informations font état de", etc.
 - Garde uniquement l'événement principal.
-- Titre de 1 à 5 mots.
+- Si SOURCE contient un pays ou un code pays, indique le nom du pays en français dans le résumé et, si pertinent, dans le titre.
+- Si SOURCE contient un code ISO de pays (ex. IR, FR, US), transforme-le en nom français sans inventer d'autre information.
+- Ne produis jamais un titre composé uniquement d'acteurs vagues ou de codes.
+- Titre de 2 à 6 mots, lisible immédiatement.
 - Résumé de 1 ou 2 phrases très courtes.
+- La première phrase doit préciser le pays ou le lieu quand cette information est disponible dans SOURCE.
 - Le titre doit utiliser uniquement des éléments présents dans SOURCE.
 
 Réponds exactement :
@@ -1026,7 +1058,9 @@ def format_time(date_string):
     if dt is None:
         return date_string
 
-    return dt.astimezone().strftime("%H:%M")
+    # GitHub Actions tourne généralement en UTC : ne jamais utiliser
+    # astimezone() sans zone explicite. Paris = UTC+2 en été, UTC+1 en hiver.
+    return dt.astimezone(ZoneInfo("Europe/Paris")).strftime("%H:%M")
 
 
 def send_flash(cluster):
