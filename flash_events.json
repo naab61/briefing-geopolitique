@@ -171,5 +171,11 @@
     "date": "2026-09-24T21:55:49+00:00",
     "channel": "GeoConfirmed",
     "post_id": "csources/527473"
+  },
+  {
+    "signature": "attaque|yemen",
+    "date": "2026-09-25T05:38:58+00:00",
+    "channel": "OSINTdefender",
+    "post_id": "OSINTdefender/20330"
   }
 ]
