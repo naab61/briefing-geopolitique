@@ -423,5 +423,45 @@
     "sources": [
       "GDELT Events"
     ]
+  },
+  {
+    "fingerprint": "1592100|police|worker",
+    "date": "2026-09-25T08:30:00+00:00",
+    "score": 25,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "2609142|city|prince|york",
+    "date": "2026-09-25T08:30:00+00:00",
+    "score": 25,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "1661377|states|united",
+    "date": "2026-09-25T08:30:00+00:00",
+    "score": 25,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "10074674|iranian|tehran",
+    "date": "2026-09-25T08:30:00+00:00",
+    "score": 20,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "531871|court|house|states|supreme|united|white",
+    "date": "2026-09-25T08:30:00+00:00",
+    "score": 20,
+    "sources": [
+      "GDELT Events"
+    ]
   }
 ]
