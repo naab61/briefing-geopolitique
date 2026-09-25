@@ -1464,5 +1464,18 @@
     "sources": [
       "news.wjct.org"
     ]
+  },
+  {
+    "fingerprint": "italian|italy|latvia|military|nato|riga|2960561|3206594|3212216|armored|drill|during|fellow|fire|four|friendly|incident|injured|italian|italy|latvia|military|nato|opened|riga|soldiers|training|troops|vehicle|wounded",
+    "identity": "MILITARY   1 NATO troops injured in friendly fire training incident — Four Italian soldiers have been wounded after one of their own troops opened fire on a fellow armored vehicle during a NATO drill in Latvia R ITALIAN LATVIA -2960561 4 NATO troops injured in friendly fire training incident — Four Italian soldiers have been wounded after one of their own troops opened fire on a fellow armored vehicle during a NATO drill in Latvia R ITALIAN LATVIA -3206594 1 NATO troops injured in friendly fire training incident — Four Italian soldiers have been wounded after one of their own troops opened fire on a fellow armored vehicle during a NATO drill in Latvia R LATVIA NATO IT 1 NATO troops injured in friendly fire training incident — Four Italian soldiers have been wounded after one of their own troops opened fire on a fellow armored vehicle during a NATO drill in Latvia R LATVIA ITALIAN IT 4 NATO troops injured in friendly fire training incident — Four Italian soldiers have been wounded after one of their own troops opened fire on a fellow armored vehicle during a NATO drill in Latvia R ITALIAN NATO IT 1  ITALIAN LATVIA -2960561 4  ITALIAN LATVIA -3206594 4  ITALY RIGA -3212216 4  ITALIAN NATO IT 4  RIGA   4  RIGA LATVIA -3212216 4  ITALY LATVIA -3212216 1  LATVIA   1 ",
+    "actors": "MILITARY ITALIAN LATVIA ITALIAN LATVIA LATVIA NATO LATVIA ITALIAN ITALIAN NATO ITALIAN LATVIA ITALIAN LATVIA ITALY RIGA ITALIAN NATO RIGA RIGA LATVIA ITALY LATVIA LATVIA",
+    "country": "Lettonie",
+    "title": "Quatre soldats italiens blessés par tir ami en Lettonie",
+    "summary": "Quatre militaires italiens ont été blessés lors d'un exercice de l'OTAN en Lettonie après qu'un tir ami a touché leur véhicule blindé. Cet incident de sécurité au sein de l'Alliance atlantique justifie une alerte immédiate.",
+    "date": "2026-09-25T23:45:00+00:00",
+    "score": 25,
+    "sources": [
+      "bignewsnetwork.com"
+    ]
   }
 ]
