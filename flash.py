@@ -38,7 +38,7 @@ GDELT_FILE = "flash_gdelt_seen.json"
 
 MAX_TELEGRAM_AGE_MINUTES = 30
 MAX_EVENT_AGE_MINUTES = 180
-EVENT_MEMORY_HOURS = 12
+EVENT_MEMORY_HOURS = 24
 MAX_FLASHES_PER_RUN = 2
 PARIS_TZ = ZoneInfo("Europe/Paris")
 
@@ -987,11 +987,14 @@ def select_flash_clusters(clusters):
 
         fingerprint = make_cluster_fingerprint(cluster)
 
-        if fingerprint in recent_keys:
-            print("  -> REJET: événement déjà envoyé")
+        if fingerprint in recent_keys or recent_event_is_repeat(cluster, previous):
+            print("  -> REJET: événement déjà envoyé / reformulation du même événement")
             continue
 
         cluster["fingerprint"] = fingerprint
+        identity, actors = make_cluster_identity(cluster)
+        cluster["identity"] = identity
+        cluster["actors"] = actors
         selected.append(cluster)
 
         if len(selected) >= MAX_FLASHES_PER_RUN:
@@ -1000,25 +1003,70 @@ def select_flash_clusters(clusters):
     return selected
 
 
-def make_cluster_fingerprint(cluster):
+def make_cluster_identity(cluster):
     pieces = []
-
+    actors = []
     for signal in cluster["signals"]:
         if signal["kind"] == "gdelt":
+            for key in ("actor1", "actor2"):
+                value = str(signal.get(key, "")).strip()
+                if value:
+                    actors.append(value)
             pieces.extend([
                 signal.get("actor1", ""),
                 signal.get("actor2", ""),
                 signal.get("location", ""),
                 signal.get("country", ""),
+                signal.get("context", ""),
             ])
         else:
             pieces.append(signal.get("text", ""))
 
-    words = sorted(
-        normalize_words(" ".join(pieces))
+    return " ".join(pieces), actors
+
+
+def make_cluster_fingerprint(cluster):
+    identity, actors = make_cluster_identity(cluster)
+    words = sorted(normalize_words(identity))
+    actor_words = sorted(normalize_words(" ".join(actors)))
+    return "|".join((actor_words + words)[:30])
+
+
+def recent_event_is_repeat(cluster, previous):
+    identity, actors = make_cluster_identity(cluster)
+    current_words = normalize_words(identity)
+    current_actors = normalize_words(" ".join(actors))
+    current_country = " ".join(
+        sorted({
+            str(x.get("country", "")).strip().lower()
+            for x in cluster["signals"]
+            if x.get("kind") == "gdelt" and x.get("country")
+        })
     )
 
-    return "|".join(words[:18])
+    for item in previous:
+        old_identity = str(item.get("identity") or "")
+        if not old_identity:
+            old_identity = str(item.get("title") or "") + " " + str(item.get("summary") or "")
+        old_words = normalize_words(old_identity)
+        if not old_words or not current_words:
+            continue
+
+        old_country = str(item.get("country") or "").strip().lower()
+        sim = len(current_words & old_words) / max(1, len(current_words | old_words))
+
+        # Même pays + acteurs communs : seuil volontairement plus bas pour
+        # détecter une nouvelle dépêche reformulant exactement le même fait.
+        old_actors = normalize_words(str(item.get("actors") or ""))
+        actor_overlap = len(current_actors & old_actors)
+        if current_country and old_country and current_country == old_country and actor_overlap >= 1 and sim >= 0.25:
+            return True
+        if actor_overlap >= 2 and sim >= 0.28:
+            return True
+        if sim >= 0.50:
+            return True
+
+    return False
 
 
 # ============================================================
@@ -1297,8 +1345,14 @@ def send_flash(cluster):
 
     events = load_json_list(EVENT_FILE)
 
+    identity, actors = make_cluster_identity(cluster)
     events.append({
         "fingerprint": cluster["fingerprint"],
+        "identity": identity,
+        "actors": " ".join(actors),
+        "country": result.get("country", ""),
+        "title": title,
+        "summary": summary,
         "date": latest_date,
         "score": cluster["score"],
         "sources": sources,
