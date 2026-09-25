@@ -35,8 +35,8 @@ SEEN_FILE = "flash_seen.json"
 EVENT_FILE = "flash_events.json"
 GDELT_FILE = "flash_gdelt_seen.json"
 
-MAX_TELEGRAM_AGE_MINUTES = 30
-MAX_EVENT_AGE_MINUTES = 45
+MAX_TELEGRAM_AGE_MINUTES = 120
+MAX_EVENT_AGE_MINUTES = 180
 EVENT_MEMORY_HOURS = 12
 
 TELEGRAM_CHANNELS = [
@@ -734,6 +734,11 @@ def select_flash_clusters(clusters):
         propagated = (
             gdelt_sources >= 2
             or len(telegram_sources) >= 2
+            or any(
+                x.get("mentions", 0) >= 10
+                for x in signals
+                if x["kind"] == "gdelt"
+            )
         )
 
         if not propagated:
