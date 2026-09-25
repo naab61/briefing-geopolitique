@@ -1199,5 +1199,23 @@
     "sources": [
       "GDELT Events"
     ]
+  },
+  {
+    "fingerprint": "1044367|1506338|2960561|531871|china|european|house|jinping|journalist|kyiv|president|russia|russian|turkey|ukraine|ukrainian|union|white",
+    "date": "2026-09-25T16:00:00+00:00",
+    "score": 35,
+    "sources": [
+      "aol.co.uk",
+      "bicesteradvertiser.net",
+      "gazetteandherald.co.uk"
+    ]
+  },
+  {
+    "fingerprint": "american|congress|court|government|supreme|voter",
+    "date": "2026-09-25T16:00:00+00:00",
+    "score": 31,
+    "sources": [
+      "kawc.org"
+    ]
   }
 ]
