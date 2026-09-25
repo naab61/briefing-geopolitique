@@ -303,5 +303,45 @@
     "sources": [
       "GDELT Events"
     ]
+  },
+  {
+    "fingerprint": "2598646|2601889|community|government|justice|kingdom|london|police|prison|system|united",
+    "date": "2026-09-25T08:00:00+00:00",
+    "score": 31,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "darfur|gambia|leone|liberia|mali|nigeria|sierra",
+    "date": "2026-09-25T08:00:00+00:00",
+    "score": 25,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "ethiopia",
+    "date": "2026-09-25T08:00:00+00:00",
+    "score": 25,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "451676|department|fire|indiana|school|states|switz|united",
+    "date": "2026-09-25T08:00:00+00:00",
+    "score": 19,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "571850|media|site",
+    "date": "2026-09-25T08:00:00+00:00",
+    "score": 19,
+    "sources": [
+      "GDELT Events"
+    ]
   }
 ]
