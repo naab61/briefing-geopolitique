@@ -1027,39 +1027,57 @@ def make_cluster_fingerprint(cluster):
 
 def shorten_flash_with_gemini(source_text):
     prompt = f"""
-Tu es le filtre éditorial d'un radar mondial de breaking news.
+Tu es le filtre éditorial final d'un radar mondial de breaking news.
 
 SOURCE :
 {source_text}
 
-Décide d'abord si cela mérite réellement un FLASH immédiat.
+Ta mission n'est PAS de vérifier seulement s'il existe plusieurs URLs.
+Tu dois décider si le cluster décrit un événement NOUVEAU, RÉELLEMENT IMPORTANT
+et suffisamment clair pour mériter une alerte immédiate.
+
+INTERPRÉTATION DE LA COUVERTURE GDELT :
+- "Sources distinctes dans GDELT" = nombre de sources d'information distinctes ayant couvert l'événement.
+- "Articles" = nombre de documents couvrant l'événement.
+- "Mentions" = intensité des mentions de l'événement.
+- Une seule ligne SOURCE peut donc représenter plusieurs médias indépendants.
+- Si GDELT indique au moins 3 sources distinctes et plusieurs articles, NE considère PAS cela comme "une seule source".
+
+AGENCES :
+- Reuters, AFP, Associated Press, EFE et autres agences fiables sont des sources autorisées.
+- Une dépêche Reuters reprise par plusieurs sites reste UNE source canonique Reuters.
+- Une reprise d'agence ne doit pas être comptée comme une confirmation indépendante supplémentaire.
+- Une agence directe peut parfaitement déclencher un FLASH si l'événement est majeur ou réellement émergent.
 
 REFUSE (REPONSE: NON) si c'est :
-- une déclaration ou demande politique ordinaire sans événement nouveau majeur ;
+- une déclaration, demande ou réaction politique ordinaire sans événement nouveau majeur ;
 - une visite, réunion ou annonce institutionnelle de routine ;
 - un petit contrat, partenariat, protocole ou accord universitaire/commercial ;
-- une analyse, opinion, commentaire ou résumé d'actualité ;
-- une information provenant d'une seule source ou d'une seule occurrence ;
-- une dépêche d'agence seule si elle ne décrit pas un événement réellement important ou émergent ;
-- plusieurs sites qui reprennent exactement la même dépêche d'agence : cela ne constitue pas plusieurs confirmations indépendantes ;
-- un élément ambigu, mal compris ou insuffisamment documenté ;
-- quelque chose dont l'importance mondiale ou nationale est faible.
+- une analyse, opinion, commentaire ou simple résumé ;
+- une information ambiguë, mal comprise, contradictoire ou sans fait concret identifiable ;
+- un événement ancien simplement remis en contexte ;
+- une actualité locale ou sectorielle sans importance notable ;
+- une information dont le cluster ne montre ni propagation suffisante ni impact important.
 
-ACCEPTE seulement si les sources montrent le même événement nouveau et significatif,
-avec une propagation réelle ou un impact potentiellement important maintenant.
+ACCEPTE si AU MOINS UNE des conditions suivantes est satisfaite :
+1. le cluster montre une propagation rapide et claire (par exemple 3+ sources GDELT distinctes et plusieurs articles) ET l'événement est important ;
+2. une agence fiable directe rapporte un événement majeur et manifestement nouveau ;
+3. plusieurs signaux sociaux indépendants montrent qu'un événement est en train de devenir viral ou important ;
+4. l'événement a un impact humain, sécuritaire, politique, diplomatique, économique, environnemental ou international suffisamment important pour justifier une alerte immédiate.
 
-Important : plusieurs lignes provenant du même article ne comptent que comme UNE source.
-Une agence fiable (Reuters, AFP, Associated Press, EFE, etc.) compte comme UNE source canonique.
-Un site qui republie une dépêche d'agence est rattaché à cette agence et ne compte PAS comme une source indépendante supplémentaire.
-Une dépêche d'agence directe peut néanmoins être la source principale d'un FLASH si l'événement est réellement important ou émergent.
+Ne rejette donc PAS automatiquement un cluster parce qu'il n'y a qu'une URL affichée dans SOURCE :
+regarde les champs "Sources distinctes dans GDELT", "Articles" et "Mentions".
+
+Le résumé doit expliquer LE FAIT NOUVEAU, pas répéter un nom d'acteur ou une catégorie GDELT.
+Le titre doit être compréhensible seul et contenir le pays ou le lieu principal lorsqu'il est connu.
 
 Si REFUS : réponds exactement :
 NON
 
 Sinon, réponds exactement :
 OUI
-TITRE: [3 à 7 mots, pays ou lieu si connu]
-RESUME: [1 ou 2 phrases courtes, factuelles, compréhensibles sans contexte]
+TITRE: [3 à 8 mots, pays ou lieu si connu]
+RESUME: [1 ou 2 phrases courtes décrivant le fait nouveau et pourquoi il justifie l'alerte]
 PAYS: [pays ou lieu principal]
 
 Ne rajoute aucun autre texte.
