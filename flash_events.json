@@ -263,5 +263,45 @@
     "sources": [
       "GDELT Events"
     ]
+  },
+  {
+    "fingerprint": "2601889|justice|kingdom|london|system|united",
+    "date": "2026-09-25T08:00:00+00:00",
+    "score": 31,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "2601889|community|prison",
+    "date": "2026-09-25T08:00:00+00:00",
+    "score": 31,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "2598646|london|police",
+    "date": "2026-09-25T08:00:00+00:00",
+    "score": 31,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "darfur|gambia|leone|liberia|nigeria|sierra",
+    "date": "2026-09-25T08:00:00+00:00",
+    "score": 25,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "darfur|liberia|mali|nigeria",
+    "date": "2026-09-25T08:00:00+00:00",
+    "score": 25,
+    "sources": [
+      "GDELT Events"
+    ]
   }
 ]
