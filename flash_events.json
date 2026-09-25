@@ -863,5 +863,45 @@
     "sources": [
       "GDELT Events"
     ]
+  },
+  {
+    "fingerprint": "doctor",
+    "date": "2026-09-25T10:45:00+00:00",
+    "score": 31,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "ethiopian",
+    "date": "2026-09-25T10:45:00+00:00",
+    "score": 31,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "government|israel",
+    "date": "2026-09-25T10:45:00+00:00",
+    "score": 25,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "1273769|603950|604694|618300|620571|afar|africa|amhara|armed|associated|base|eritrea|ethiopia|ethiopian|government|group|human|israel",
+    "date": "2026-09-25T10:45:00+00:00",
+    "score": 25,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "tribunal",
+    "date": "2026-09-25T10:45:00+00:00",
+    "score": 25,
+    "sources": [
+      "GDELT Events"
+    ]
   }
 ]
