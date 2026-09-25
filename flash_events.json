@@ -1425,5 +1425,18 @@
     "sources": [
       "thenews.com.pk"
     ]
+  },
+  {
+    "fingerprint": "arabia|forces|government|saudi|yemen|3191442|against|arabia|army|called|citizens|examiner|forces|general|government|houthi|houthis|join|launceston|leader|mobilisation|offering|rebels|saudi|urges|while|yemen",
+    "identity": "YEMEN   4 Yemen leader urges general mobilisation against Houthis | The Examiner | Launceston, TAS — The leader of Yemen's government has called for citizens to join the army against Houthi rebels while offering... GOVERNMENT FORCES YEMEN -3191442 1 Yemen leader urges general mobilisation against Houthis | The Examiner | Launceston, TAS — The leader of Yemen's government has called for citizens to join the army against Houthi rebels while offering... SAUDI ARABIA YEMEN -3191442 4 Yemen leader urges general mobilisation against Houthis | The Examiner | Launceston, TAS — The leader of Yemen's government has called for citizens to join the army against Houthi rebels while offering... YEMEN GOVERNMENT FORCES SA 1 Yemen leader urges general mobilisation against Houthis | The Examiner | Launceston, TAS — The leader of Yemen's government has called for citizens to join the army against Houthi rebels while offering... YEMEN GOVERNMENT FORCES SA 1 Yemen leader urges general mobilisation against Houthis | The Examiner | Launceston, TAS — The leader of Yemen's government has called for citizens to join the army against Houthi rebels while offering...",
+    "actors": "YEMEN GOVERNMENT FORCES YEMEN SAUDI ARABIA YEMEN YEMEN GOVERNMENT FORCES YEMEN GOVERNMENT FORCES",
+    "country": "Yémen",
+    "title": "Appel à la mobilisation générale au Yémen",
+    "summary": "Le dirigeant du gouvernement yéménite appelle les citoyens à rejoindre l'armée pour lutter contre les rebelles houthis, marquant une escalade sécuritaire majeure dans le pays.",
+    "date": "2026-09-25T21:15:00+00:00",
+    "score": 31,
+    "sources": [
+      "examiner.com.au"
+    ]
   }
 ]
