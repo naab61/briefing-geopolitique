@@ -1200,7 +1200,7 @@ def send_flash(cluster):
     result = shorten_flash_with_gemini(source)
 
     if result is None:
-        print("FLASH rejeté par le filtre éditorial Gemini")
+        print("FLASH rejeté par le filtre éditorial Gemini | raison non détaillée")
         return False
 
     title = result["title"]
