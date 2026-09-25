@@ -1373,5 +1373,18 @@
     "sources": [
       "weartv.com"
     ]
+  },
+  {
+    "fingerprint": "iran|iranian|reuters|washington|10074674|531871|about|added|amid|arabia|attacks|brent|climbed|close|concerns|crude|east|four|fresh|heading|high|highest|hits|iran|iranian|middle|missile|more|percent|prices",
+    "identity": "WASHINGTON IRAN 10074674 4 Oil hits one-week high amid Saudi attacks, stalled Iran talks — Crude oil prices climbed about four percent on September 24, with Brent heading for its highest close in more than a week as fresh missile attacks on Saudi Arabia added to concerns over Middle East supplies IRANIAN REUTERS 531871 3 Oil hits one-week high amid Saudi attacks, stalled Iran talks — Crude oil prices climbed about four percent on September 24, with Brent heading for its highest close in more than a week as fresh missile attacks on Saudi Arabia added to concerns over Middle East supplies IRANIAN REUTERS 531871 3 Oil hits one-week high amid Saudi attacks, stalled Iran talks — Crude oil prices climbed about four percent on September 24, with Brent heading for its highest close in more than a week as fresh missile attacks on Saudi Arabia added to concerns over Middle East supplies",
+    "actors": "WASHINGTON IRAN IRANIAN REUTERS IRANIAN REUTERS",
+    "country": "Arabie saoudite / Moyen-Orient",
+    "title": "Hausse des prix du pétrole après des attaques en Arabie saoudite",
+    "summary": "Les cours du pétrole ont bondi d'environ 4% pour atteindre un pic d'une semaine, portés par de nouvelles attaques de missiles en Arabie saoudite et l'enlisement des négociations avec l'Iran.",
+    "date": "2026-09-25T19:45:00+00:00",
+    "score": 31,
+    "sources": [
+      "floridastatesman.com"
+    ]
   }
 ]
