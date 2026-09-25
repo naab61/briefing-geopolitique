@@ -1,27 +1,43 @@
 import os
+import csv
+import io
 import json
 import re
 import urllib.request
 import urllib.parse
 import urllib.error
+import zipfile
 from html.parser import HTMLParser
-from datetime import datetime, timezone
-
+from datetime import datetime, timezone, timedelta
 
 # ============================================================
-# CONFIGURATION
+# FLASH RADAR — VERSION "TREND"
+# ============================================================
+# Principe:
+#   - aucune liste de mots-clés pour décider qu'un FLASH existe
+#   - détection d'événements émergents par propagation
+#   - GDELT Events = signal mondial large
+#   - Telegram public = signal social / OSINT
+#   - un même événement = un seul FLASH
+#   - Gemini ne fait que traduire + condenser
+#
+# Limite assumée:
+# GitHub Actions + scraping public ne garantit pas 1-5 min.
+# Ce moteur réduit fortement les retards liés aux seules sources
+# Telegram, mais la planification GitHub Actions peut rester retardée.
 # ============================================================
 
 TELEGRAM_BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 TELEGRAM_CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
 GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
 
-STATE_FILE = "flash_seen.json"
-EVENT_STATE_FILE = "flash_events.json"
+SEEN_FILE = "flash_seen.json"
+EVENT_FILE = "flash_events.json"
+GDELT_FILE = "flash_gdelt_seen.json"
 
-MAX_POST_AGE_MINUTES = 30
-EVENT_MEMORY_HOURS = 6
-
+MAX_TELEGRAM_AGE_MINUTES = 30
+MAX_EVENT_AGE_MINUTES = 45
+EVENT_MEMORY_HOURS = 12
 
 TELEGRAM_CHANNELS = [
     {"name": "OSINTdefender", "channel": "osintdefender"},
@@ -29,294 +45,86 @@ TELEGRAM_CHANNELS = [
     {"name": "Liveuamap", "channel": "liveuamap"},
 ]
 
+GDELT_LASTUPDATE = "https://data.gdeltproject.org/gdeltv2/lastupdate.txt"
+
+
+# ============================================================
+# OUTILS
+# ============================================================
 
 STOPWORDS = {
-    "the", "and", "for", "with", "from", "that", "this",
-    "are", "has", "have", "was", "were", "into", "after",
-    "before", "over", "under", "its", "their", "they",
-    "said", "says", "will", "been", "being", "than",
-    "les", "des", "une", "dans", "pour", "avec", "sur",
-    "est", "sont", "qui", "que", "aux", "par", "mais",
-    "plus", "sans", "selon"
+    "the", "and", "for", "with", "from", "that", "this", "are",
+    "has", "have", "was", "were", "into", "after", "before",
+    "over", "under", "its", "their", "they", "said", "says",
+    "will", "been", "being", "than",
+    "les", "des", "une", "dans", "pour", "avec", "sur", "est",
+    "sont", "qui", "que", "aux", "par", "mais", "plus", "sans",
+    "selon", "avec", "entre", "être", "été", "ont", "pas"
 }
 
 
-# ============================================================
-# TYPES D'ÉVÉNEMENTS
-# ============================================================
-
-EVENT_PATTERNS = {
-    "attaque": [
-        "airstrike",
-        "airstrikes",
-        "air strike",
-        "drone attack",
-        "drone attacks",
-        "drone strike",
-        "drone strikes",
-        "missile attack",
-        "missile strike",
-        "missile strikes",
-        "bombing",
-        "bombed",
-        "explosion",
-        "explosions",
-    ],
-
-    "victimes": [
-        "killed",
-        "dead",
-        "deaths",
-        "casualties",
-        "massacre",
-        "mass shooting",
-    ],
-
-    "affrontement_majeur": [
-        "invasion",
-        "invaded",
-        "major clashes",
-        "heavy fighting",
-        "large-scale fighting",
-    ],
-
-    "crise_politique": [
-        "coup",
-        "coup attempt",
-        "resignation",
-        "resigns",
-        "resigned",
-        "government collapse",
-        "government collapsed",
-        "government falls",
-        "state of emergency",
-        "martial law",
-        "mobilization",
-        "mobilisation",
-    ],
-
-    "manifestation": [
-        "mass protest",
-        "mass protests",
-        "mass demonstration",
-        "mass demonstrations",
-        "riot",
-        "riots",
-        "major unrest",
-    ],
-
-    "diplomatie": [
-        "break diplomatic relations",
-        "breaks diplomatic relations",
-        "diplomatic relations severed",
-        "ambassador expelled",
-        "ambassador expelled",
-        "expels ambassador",
-        "expelled its ambassador",
-        "embassy attack",
-        "embassy attacked",
-    ],
-
-    "cessez_le_feu": [
-        "ceasefire",
-        "cease-fire",
-        "truce",
-        "peace deal",
-        "peace agreement",
-    ],
-
-    "catastrophe": [
-        "earthquake",
-        "tsunami",
-        "hurricane",
-        "typhoon",
-        "tornado",
-        "major flood",
-        "major flooding",
-        "wildfire",
-        "wildfires",
-        "volcanic eruption",
-        "plane crash",
-        "aircraft crash",
-        "train crash",
-        "ship collision",
-        "major accident",
-    ],
-
-    "nucleaire": [
-        "nuclear test",
-        "nuclear attack",
-        "nuclear strike",
-        "nuclear threat",
-        "nuclear weapons used",
-        "radiation leak",
-        "reactor accident",
-    ],
-
-    "otage": [
-        "hostage situation",
-        "hostages taken",
-        "hostages seized",
-        "hostage crisis",
-    ],
-
-    "fermeture_majeure": [
-        "airspace closed",
-        "airspace closure",
-        "airport closed",
-        "airport closure",
-        "border closed",
-        "border closure",
-    ],
-}
+def normalize_words(text):
+    text = (text or "").lower()
+    text = re.sub(r"https?://\S+", " ", text)
+    text = re.sub(
+        r"[^a-z0-9àâçéèêëîïôûùüÿœæ\s]",
+        " ",
+        text
+    )
+    return {
+        word for word in text.split()
+        if len(word) >= 4 and word not in STOPWORDS
+    }
 
 
-# ============================================================
-# MOTIFS À EXCLURE
-# ============================================================
-
-EXCLUDED_PATTERNS = [
-    # Contrats / industrie / achats
-    "contract",
-    "contracts",
-    "awarded",
-    "award",
-    "procurement",
-    "production contract",
-    "production of",
-    "million contract",
-    "billion contract",
-    "worth $",
-    "worth €",
-
-    # Programmes / développement
-    "development program",
-    "development programme",
-    "development of",
-    "developing",
-    "developed a new",
-    "new program",
-    "new programme",
-
-    # Installations / infrastructures
-    "facility",
-    "facilities",
-    "megawatts",
-    "megawatt",
-    "mw power",
-    "power plant",
-    "nuclear power plant",
-
-    # Communication / commentaire sans événement concret
-    "statement",
-    "statements",
-    "said on social media",
-    "said in a statement",
-    "says in a statement",
-    "commented on",
-    "commentary",
-    "analysis",
-    "analysts say",
-    "experts say",
-
-    # Rumeur / narration sociale sans événement établi
-    "publications font état",
-    "social media posts claim",
-    "social media reports",
-    "posts claim",
-    "posts reportedly",
-    "reportedly claims",
-]
+def similarity(text_a, text_b):
+    a = normalize_words(text_a)
+    b = normalize_words(text_b)
+    if not a or not b:
+        return 0.0
+    return len(a & b) / max(1, len(a | b))
 
 
-# ============================================================
-# LIEUX UTILISÉS POUR LA DÉTECTION D'ÉVÉNEMENTS
-# ============================================================
+def parse_iso_date(value):
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(
+            value.replace("Z", "+00:00")
+        ).astimezone(timezone.utc)
+    except Exception:
+        return None
 
-LOCATIONS = [
-    # Ukraine / Russie
-    "kyiv",
-    "kiev",
-    "odesa",
-    "odessa",
-    "kharkiv",
-    "kherson",
-    "zaporizhzhia",
-    "zaporizhzhia",
-    "donetsk",
-    "luhansk",
-    "mariupol",
-    "crimea",
-    "crimea",
-    "moscow",
-    "moscou",
-    "st petersburg",
-    "saint petersburg",
-    "russia",
-    "russie",
-    "ukraine",
 
-    # Moyen-Orient
-    "gaza",
-    "rafah",
-    "beirut",
-    "beyrouth",
-    "lebanon",
-    "liban",
-    "israel",
-    "israël",
-    "iran",
-    "syria",
-    "syrie",
-    "damascus",
-    "iraq",
-    "irak",
-    "baghdad",
-    "yemen",
-    "yémen",
-    "sanaa",
-    "sana'a",
+def parse_gdelt_date(value):
+    try:
+        return datetime.strptime(
+            str(value),
+            "%Y%m%d%H%M%S"
+        ).replace(tzinfo=timezone.utc)
+    except Exception:
+        return None
 
-    # États-Unis / Europe
-    "washington",
-    "new york",
-    "london",
-    "paris",
-    "berlin",
-    "brussels",
-    "bruxelles",
 
-    # Afrique
-    "sudan",
-    "soudan",
-    "khartoum",
-    "somalia",
-    "somalie",
-    "ethiopia",
-    "ethiopie",
-    "nigeria",
-    "south africa",
-    "durban",
+def age_minutes(dt):
+    if dt is None:
+        return None
+    return (
+        datetime.now(timezone.utc) - dt
+    ).total_seconds() / 60
 
-    # Asie
-    "china",
-    "chine",
-    "beijing",
-    "taiwan",
-    "japan",
-    "japon",
-    "north korea",
-    "south korea",
-    "india",
-    "pakistan",
 
-    # Autres lieux déjà rencontrés
-    "oufa",
-    "ufa",
-    "kuibyshev",
-    "kouïbychev",
-    "aberdeen",
-]
+def http_get(url, timeout=30):
+    request = urllib.request.Request(
+        url,
+        headers={
+            "User-Agent":
+                "Mozilla/5.0 "
+                "(compatible; FlashTrendRadar/1.0)"
+        }
+    )
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+        return response.read()
 
 
 # ============================================================
@@ -327,39 +135,28 @@ class TelegramPostParser(HTMLParser):
 
     def __init__(self):
         super().__init__()
-
         self.in_post = False
         self.post_depth = 0
         self.in_text = False
-
         self.current_text = []
         self.current_post_id = None
         self.current_date = ""
-
         self.posts = []
 
     def handle_starttag(self, tag, attrs):
-
         attrs = dict(attrs)
         classes = attrs.get("class", "")
 
-        # Début d'un post
         if "tgme_widget_message_wrap" in classes:
-
             self.in_post = True
             self.post_depth = 1
-
             self.in_text = False
             self.current_text = []
-
             self.current_post_id = attrs.get("data-post")
             self.current_date = ""
-
             return
 
-        # Divs internes du post
         if self.in_post and tag == "div":
-
             self.post_depth += 1
 
             if (
@@ -368,7 +165,6 @@ class TelegramPostParser(HTMLParser):
             ):
                 self.current_post_id = attrs.get("data-post")
 
-        # Texte du message
         if (
             self.in_post
             and "tgme_widget_message_text" in classes
@@ -376,44 +172,30 @@ class TelegramPostParser(HTMLParser):
             self.in_text = True
             self.current_text = []
 
-        # Date du message
         if self.in_post and tag == "time":
-
             value = attrs.get("datetime", "")
-
             if value:
                 self.current_date = value.strip()
 
     def handle_data(self, data):
-
         if self.in_post and self.in_text:
-
             data = data.strip()
-
             if data:
                 self.current_text.append(data)
 
     def handle_endtag(self, tag):
-
         if not self.in_post:
             return
 
         if tag == "div":
-
             self.post_depth -= 1
 
             if self.post_depth > 0:
                 return
 
-            text = " ".join(
-                self.current_text
-            ).strip()
+            text = " ".join(self.current_text).strip()
 
-            if (
-                text
-                and len(text) > 30
-            ):
-
+            if text and len(text) > 30:
                 self.posts.append({
                     "text": text,
                     "post_id": self.current_post_id,
@@ -422,795 +204,588 @@ class TelegramPostParser(HTMLParser):
 
             self.in_post = False
             self.post_depth = 0
-
             self.in_text = False
             self.current_text = []
-
             self.current_post_id = None
             self.current_date = ""
 
 
-# ============================================================
-# ÉTAT DES POSTS DÉJÀ VUS
-# ============================================================
+def get_telegram_posts():
+    posts = []
 
-def load_seen():
+    for channel in TELEGRAM_CHANNELS:
+        url = "https://t.me/s/" + channel["channel"]
 
-    try:
-
-        with open(
-            STATE_FILE,
-            "r",
-            encoding="utf-8"
-        ) as f:
-
-            return set(
-                json.load(f)
+        try:
+            html = http_get(url).decode(
+                "utf-8",
+                errors="replace"
             )
 
-    except Exception:
+            parser = TelegramPostParser()
+            parser.feed(html)
 
-        return set()
+            for post in parser.posts:
+                post_id = post.get("post_id")
+                if not post_id:
+                    continue
+
+                posts.append({
+                    "kind": "telegram",
+                    "source": channel["name"],
+                    "source_key": post_id,
+                    "text": post["text"],
+                    "date": post["date"],
+                    "link": "https://t.me/" + post_id,
+                })
+
+            print(
+                f"Telegram {channel['name']}: "
+                f"{len(parser.posts)} posts"
+            )
+
+        except Exception as exc:
+            print(
+                f"Telegram erreur {channel['name']}: {exc}"
+            )
+
+    return posts
+
+
+# ============================================================
+# GDELT EVENTS — SIGNAL MONDIAL SANS MOTS-CLÉS
+# ============================================================
+
+# Colonnes utiles du fichier Events GDELT V2.
+# Les indices sont ceux du codebook officiel.
+GDELT = {
+    "id": 0,
+    "actor1": 6,
+    "actor2": 16,
+    "event_code": 26,
+    "quadclass": 29,
+    "goldstein": 30,
+    "mentions": 31,
+    "sources": 32,
+    "articles": 33,
+    "avg_tone": 34,
+    "action_geo": 50,
+    "action_country": 51,
+    "date_added": 56,
+    "source_url": 57,
+}
+
+
+def get_latest_gdelt_export_url():
+    raw = http_get(GDELT_LASTUPDATE).decode(
+        "utf-8",
+        errors="replace"
+    )
+
+    for line in raw.splitlines():
+        parts = line.split()
+        if len(parts) >= 3 and ".export.CSV.zip" in parts[2]:
+            return parts[2]
+
+    raise RuntimeError(
+        "Impossible de trouver le dernier fichier GDELT Events."
+    )
+
+
+def read_gdelt_events():
+    url = get_latest_gdelt_export_url()
+    print("GDELT dernier fichier:", url)
+
+    data = http_get(url, timeout=60)
+
+    events = []
+
+    with zipfile.ZipFile(io.BytesIO(data)) as archive:
+        names = archive.namelist()
+        if not names:
+            return []
+
+        with archive.open(names[0]) as raw:
+            reader = csv.reader(
+                io.TextIOWrapper(
+                    raw,
+                    encoding="utf-8",
+                    errors="replace"
+                ),
+                delimiter="\t"
+            )
+
+            for row in reader:
+                if len(row) <= GDELT["source_url"]:
+                    continue
+
+                added = parse_gdelt_date(
+                    row[GDELT["date_added"]]
+                )
+
+                age = age_minutes(added)
+                if age is None:
+                    continue
+
+                # On ne garde que le battement récent.
+                if age < 0 or age > MAX_EVENT_AGE_MINUTES:
+                    continue
+
+                try:
+                    mentions = int(
+                        row[GDELT["mentions"]] or 0
+                    )
+                except Exception:
+                    mentions = 0
+
+                try:
+                    sources = int(
+                        row[GDELT["sources"]] or 0
+                    )
+                except Exception:
+                    sources = 0
+
+                try:
+                    articles = int(
+                        row[GDELT["articles"]] or 0
+                    )
+                except Exception:
+                    articles = 0
+
+                event = {
+                    "kind": "gdelt",
+                    "source": "GDELT Events",
+                    "source_key": row[GDELT["id"]],
+                    "date": added.isoformat(),
+                    "actor1": row[GDELT["actor1"]].strip(),
+                    "actor2": row[GDELT["actor2"]].strip(),
+                    "event_code": row[GDELT["event_code"]].strip(),
+                    "quadclass": row[GDELT["quadclass"]].strip(),
+                    "goldstein": row[GDELT["goldstein"]].strip(),
+                    "mentions": mentions,
+                    "sources": sources,
+                    "articles": articles,
+                    "location": row[GDELT["action_geo"]].strip(),
+                    "country": row[GDELT["action_country"]].strip(),
+                    "link": row[GDELT["source_url"]].strip(),
+                    "age_minutes": age,
+                }
+
+                events.append(event)
+
+    print(
+        "GDELT événements récents:",
+        len(events)
+    )
+
+    return events
+
+
+# ============================================================
+# TITRES / DESCRIPTIONS DES SOURCES GDELT
+# ============================================================
+
+class PageMetaParser(HTMLParser):
+
+    def __init__(self):
+        super().__init__()
+        self.title = []
+        self.description = ""
+        self.in_title = False
+
+    def handle_starttag(self, tag, attrs):
+        attrs = dict(attrs)
+
+        if tag.lower() == "title":
+            self.in_title = True
+
+        if tag.lower() == "meta":
+            name = (
+                attrs.get("name")
+                or attrs.get("property")
+                or ""
+            ).lower()
+
+            if name in {
+                "description",
+                "og:description",
+                "twitter:description",
+            }:
+                self.description = (
+                    attrs.get("content") or ""
+                ).strip()
+
+    def handle_data(self, data):
+        if self.in_title:
+            value = data.strip()
+            if value:
+                self.title.append(value)
+
+    def handle_endtag(self, tag):
+        if tag.lower() == "title":
+            self.in_title = False
+
+
+def get_page_context(url):
+    if not url:
+        return ""
+
+    try:
+        raw = http_get(url, timeout=12).decode(
+            "utf-8",
+            errors="replace"
+        )
+
+        parser = PageMetaParser()
+        parser.feed(raw)
+
+        title = " ".join(parser.title).strip()
+        description = parser.description.strip()
+
+        parts = [x for x in [title, description] if x]
+        return " — ".join(parts)[:1200]
+
+    except Exception as exc:
+        print(
+            "Contexte source inaccessible:",
+            url,
+            exc
+        )
+        return ""
+
+
+# ============================================================
+# PERSISTANCE
+# ============================================================
+
+def load_json_list(path):
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, list) else []
+    except Exception:
+        return []
+
+
+def save_json_list(path, data, limit=500):
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(
+            data[-limit:],
+            f,
+            ensure_ascii=False,
+            indent=2
+        )
+
+
+def load_seen():
+    return set(load_json_list(SEEN_FILE))
 
 
 def save_seen(seen):
+    save_json_list(
+        SEEN_FILE,
+        list(seen),
+        limit=2000
+    )
 
-    with open(
-        STATE_FILE,
-        "w",
-        encoding="utf-8"
-    ) as f:
 
-        json.dump(
-            list(seen)[-500:],
-            f,
-            ensure_ascii=False,
-            indent=2
+# ============================================================
+# CLUSTERING / DÉTECTION DE PROPAGATION
+# ============================================================
+
+def event_text(event):
+    if event["kind"] == "gdelt":
+        return " ".join(
+            x for x in [
+                event.get("actor1", ""),
+                event.get("actor2", ""),
+                event.get("location", ""),
+                event.get("country", ""),
+                event.get("context", ""),
+            ] if x
         )
 
-
-# ============================================================
-# ÉTAT DES ÉVÉNEMENTS FLASH
-# ============================================================
-
-def load_event_state():
-
-    if not os.path.exists(
-        EVENT_STATE_FILE
-    ):
-        return []
-
-    try:
-
-        with open(
-            EVENT_STATE_FILE,
-            "r",
-            encoding="utf-8"
-        ) as f:
-
-            data = json.load(f)
-
-            if isinstance(data, list):
-                return data
-
-            return []
-
-    except Exception:
-
-        return []
+    return event.get("text", "")
 
 
-def save_event_state(events):
-
-    with open(
-        EVENT_STATE_FILE,
-        "w",
-        encoding="utf-8"
-    ) as f:
-
-        json.dump(
-            events[-100:],
-            f,
-            ensure_ascii=False,
-            indent=2
+def event_key(event):
+    if event["kind"] == "gdelt":
+        return "gdelt:" + str(
+            event.get("source_key", "")
         )
 
-
-# ============================================================
-# DATES
-# ============================================================
-
-def parse_post_datetime(date_text):
-
-    if not date_text:
-        return None
-
-    try:
-
-        dt = datetime.fromisoformat(
-            date_text.replace(
-                "Z",
-                "+00:00"
-            )
-        )
-
-        # On refuse une date sans fuseau :
-        # impossible de garantir la fraîcheur.
-        if dt.tzinfo is None:
-            return None
-
-        return dt.astimezone(
-            timezone.utc
-        )
-
-    except Exception:
-
-        return None
-
-
-def post_age_minutes(post):
-
-    dt = parse_post_datetime(
-        post.get("date", "")
-    )
-
-    if dt is None:
-        return None
-
-    return (
-        datetime.now(timezone.utc) - dt
-    ).total_seconds() / 60
-
-
-def is_flash_recent(
-    post,
-    max_minutes=MAX_POST_AGE_MINUTES
-):
-
-    date_text = post.get(
-        "date",
-        ""
-    )
-
-    age_minutes = post_age_minutes(
-        post
-    )
-
-    if age_minutes is None:
-
-        print(
-            "FRAÎCHEUR REJETÉE | "
-            f"{post.get('channel')} | "
-            f"{post.get('post_id')} | "
-            f"date={date_text} | "
-            "date invalide ou sans fuseau"
-        )
-
-        return False
-
-    print(
-        "FRAÎCHEUR | "
-        f"{post.get('channel')} | "
-        f"{post.get('post_id')} | "
-        f"date={date_text} | "
-        f"age={age_minutes:.1f} min"
-    )
-
-    return (
-        0 <= age_minutes <= max_minutes
+    return "telegram:" + str(
+        event.get("source_key", "")
     )
 
 
-# ============================================================
-# NORMALISATION
-# ============================================================
-
-def normalize_words(text):
-
-    text = text.lower()
-
-    text = re.sub(
-        r"https?://\S+",
-        " ",
-        text
+def cluster_score(cluster):
+    sources = set(
+        x.get("source", "")
+        for x in cluster["signals"]
     )
 
-    text = re.sub(
-        r"[^a-z0-9àâçéèêëîïôûùüÿœæ\s]",
-        " ",
-        text
-    )
-
-    return {
-        word
-        for word in text.split()
-        if (
-            len(word) >= 4
-            and word not in STOPWORDS
-        )
-    }
-
-
-# ============================================================
-# DÉTECTION DU TYPE D'ÉVÉNEMENT
-# ============================================================
-
-def detect_event_type(text):
-
-    text = text.lower()
-
-    for event_type, patterns in EVENT_PATTERNS.items():
-
-        for pattern in patterns:
-
-            if pattern in text:
-                return event_type
-
-    return None
-
-
-def detect_location(text):
-
-    text = text.lower()
-
-    for location in LOCATIONS:
-
-        if location in text:
-            return location
-
-    return ""
-
-
-# ============================================================
-# SIGNATURE D'ÉVÉNEMENT
-# ============================================================
-
-def event_signature(post):
-
-    text = post.get(
-        "text",
-        ""
-    )
-
-    event_type = detect_event_type(
-        text
-    )
-
-    location = detect_location(
-        text
-    )
-
-    if not event_type:
-        return ""
-
-    # Le lieu permet d'éviter de considérer
-    # deux événements différents comme identiques.
-    if location:
-
-        return (
-            f"{event_type}|{location}"
-        )
-
-    # Si aucun lieu n'est détecté,
-    # on utilise quelques mots significatifs.
-    words = sorted(
-        normalize_words(text)
-    )
-
-    if words:
-
-        return (
-            f"{event_type}|"
-            + "|".join(words[:5])
-        )
-
-    return event_type
-
-
-# ============================================================
-# ÉVÉNEMENT DÉJÀ ENVOYÉ
-# ============================================================
-
-def event_already_sent(
-    post,
-    events,
-    max_hours=EVENT_MEMORY_HOURS
-):
-
-    current_signature = event_signature(
-        post
-    )
-
-    if not current_signature:
-        return False
-
-    now = datetime.now(
-        timezone.utc
-    )
-
-    for old_event in events:
-
-        old_signature = old_event.get(
-            "signature",
-            ""
-        )
-
-        if (
-            old_signature
-            != current_signature
-        ):
-            continue
-
-        old_date = parse_post_datetime(
-            old_event.get(
-                "date",
-                ""
-            )
-        )
-
-        if old_date is None:
-            continue
-
-        age_hours = (
-            now - old_date
-        ).total_seconds() / 3600
-
-        if (
-            0 <= age_hours <= max_hours
-        ):
-
-            print(
-                "DOUBLON ÉVÉNEMENT | "
-                f"{current_signature} | "
-                f"ancien={age_hours:.1f}h"
-            )
-
-            return True
-
-    return False
-
-
-# ============================================================
-# RÉCUPÉRATION DES NOUVEAUX POSTS
-# ============================================================
-
-def get_new_posts():
-
-    seen = load_seen()
-
-    new_posts = []
-
-    first_run = (
-        len(seen) == 0
-    )
-
-    for channel in TELEGRAM_CHANNELS:
-
-        username = channel[
-            "channel"
-        ]
-
-        url = (
-            "https://t.me/s/"
-            + username
-        )
-
-        try:
-
-            request = urllib.request.Request(
-                url,
-                headers={
-                    "User-Agent":
-                        "Mozilla/5.0 "
-                        "(compatible; "
-                        "FlashGeopolitique/1.0)"
-                }
-            )
-
-            with urllib.request.urlopen(
-                request,
-                timeout=30
-            ) as response:
-
-                html = response.read().decode(
-                    "utf-8",
-                    errors="replace"
-                )
-
-            parser = TelegramPostParser()
-
-            parser.feed(html)
-
-            print(
-                f"{channel['name']} : "
-                f"{len(parser.posts)} posts bruts détectés"
-            )
-
-            for post in parser.posts:
-
-                post_id = post.get(
-                    "post_id"
-                )
-
-                if not post_id:
-
-                    print(
-                        "POST SANS ID : "
-                        + post.get(
-                            "text",
-                            ""
-                        )[:100]
-                    )
-
-                    continue
-
-                if post_id in seen:
-                    continue
-
-                seen.add(
-                    post_id
-                )
-
-                new_posts.append({
-                    "channel":
-                        channel["name"],
-
-                    "post_id":
-                        post_id,
-
-                    "text":
-                        post["text"],
-
-                    "date":
-                        post["date"],
-
-                    "link":
-                        "https://t.me/"
-                        + post_id,
-                })
-
-        except Exception as e:
-
-            print(
-                f"Erreur "
-                f"{channel['name']}: {e}"
-            )
-
-    # IMPORTANT :
-    # sauvegarder même lors du premier lancement.
-    save_seen(
-        seen
-    )
-
-    print(
-        "Total avant filtrage : "
-        f"{len(new_posts)} nouveaux posts"
-    )
-
-    if first_run:
-
-        print(
-            "Premier lancement : "
-            "flux initial mémorisé, "
-            "aucun FLASH historique envoyé."
-        )
-
-        return []
-
-    return new_posts
-
-
-# ============================================================
-# FILTRE FLASH
-# ============================================================
-
-def is_flash_candidate(post):
-
-    text = post.get(
-        "text",
-        ""
-    ).lower()
-
-    # --------------------------------------------------------
-    # 1. EXCLUSIONS ABSOLUES
-    # --------------------------------------------------------
-
-    for pattern in EXCLUDED_PATTERNS:
-
-        if pattern in text:
-
-            print(
-                "REJET FILTRE | "
-                f"{post.get('channel')} | "
-                f"{post.get('post_id')} | "
-                f"raison={pattern}"
-            )
-
-            return False
-
-    # --------------------------------------------------------
-    # 2. DÉTECTION DE L'ÉVÉNEMENT
-    # --------------------------------------------------------
-
-    event_type = detect_event_type(
-        text
-    )
-
-    if not event_type:
-
-        print(
-            "REJET FILTRE | "
-            f"{post.get('channel')} | "
-            f"{post.get('post_id')} | "
-            "aucun événement majeur détecté"
-        )
-
-        return False
-
-    # --------------------------------------------------------
-    # 3. CAS PARTICULIER : VICTIMES / MASSACRE
-    # --------------------------------------------------------
-
-    if event_type == "victimes":
-
-        concrete_victim_signal = any(
-            pattern in text
-            for pattern in [
-                "killed",
-                "dead",
-                "deaths",
-                "casualties",
-                "mass shooting",
-            ]
-        )
-
-        if not concrete_victim_signal:
-
-            print(
-                "REJET FILTRE | "
-                f"{post.get('channel')} | "
-                f"{post.get('post_id')} | "
-                "victimes non suffisamment concrètes"
-            )
-
-            return False
-
-    # --------------------------------------------------------
-    # 4. CAS ATTAQUE :
-    #    on veut un événement concret,
-    #    pas simplement le mot "strike"
-    # --------------------------------------------------------
-
-    if event_type == "attaque":
-
-        concrete_attack = any(
-            pattern in text
-            for pattern in [
-                "airstrike",
-                "airstrikes",
-                "air strike",
-                "drone attack",
-                "drone attacks",
-                "drone strike",
-                "drone strikes",
-                "missile attack",
-                "missile strike",
-                "missile strikes",
-                "bombing",
-                "bombed",
-                "explosion",
-                "explosions",
-            ]
-        )
-
-        if not concrete_attack:
-
-            print(
-                "REJET FILTRE | "
-                f"{post.get('channel')} | "
-                f"{post.get('post_id')} | "
-                "attaque opérationnelle/routine"
-            )
-
-            return False
-
-    # --------------------------------------------------------
-    # 5. ÉVITER LES RÉCITS SOCIAUX SANS FAIT CONCRET
-    # --------------------------------------------------------
-
-    narrative_only_patterns = [
-        "posts claim",
-        "social media claims",
-        "social media reports",
-        "publications font état",
-        "reports suggest",
-        "reports claim",
-        "according to posts",
+    gdelt_events = [
+        x for x in cluster["signals"]
+        if x["kind"] == "gdelt"
     ]
 
-    if any(
-        pattern in text
-        for pattern in narrative_only_patterns
-    ):
+    telegram_events = [
+        x for x in cluster["signals"]
+        if x["kind"] == "telegram"
+    ]
 
-        # On accepte quand même si le texte contient
-        # un signal concret fort.
-        concrete_signal = any(
-            pattern in text
-            for pattern in [
-                "explosion",
-                "explosions",
-                "killed",
-                "dead",
-                "deaths",
-                "casualties",
-                "earthquake",
-                "plane crash",
-                "aircraft crash",
-                "ceasefire",
-                "coup",
-                "ambassador expelled",
-                "airspace closed",
-            ]
-        )
+    source_count = len(sources)
 
-        if not concrete_signal:
-
-            print(
-                "REJET FILTRE | "
-                f"{post.get('channel')} | "
-                f"{post.get('post_id')} | "
-                "récit non suffisamment concret"
-            )
-
-            return False
-
-    # --------------------------------------------------------
-    # 6. LOCALISATION OU SIGNAL STRATÉGIQUE
-    # --------------------------------------------------------
-
-    location = detect_location(
-        text
+    mentions = sum(
+        x.get("mentions", 0)
+        for x in gdelt_events
     )
 
-    if not location:
-
-        strong_event = event_type in {
-            "nucleaire",
-            "cessez_le_feu",
-            "diplomatie",
-            "crise_politique",
-            "catastrophe",
-        }
-
-        if not strong_event:
-
-            print(
-                "REJET FILTRE | "
-                f"{post.get('channel')} | "
-                f"{post.get('post_id')} | "
-                "aucun lieu identifiable"
-            )
-
-            return False
-
-    print(
-        "CANDIDAT FLASH | "
-        f"{post.get('channel')} | "
-        f"{post.get('post_id')} | "
-        f"type={event_type} | "
-        f"lieu={location or 'non identifié'}"
+    gdelt_sources = max(
+        [x.get("sources", 0) for x in gdelt_events],
+        default=0
     )
 
-    return True
+    score = 0
+
+    # Propagation multi-source.
+    score += min(source_count, 5) * 3
+
+    # Propagation GDELT mesurée.
+    if gdelt_sources >= 2:
+        score += 6
+    if gdelt_sources >= 3:
+        score += 6
+    if mentions >= 5:
+        score += 3
+    if mentions >= 10:
+        score += 5
+
+    # Plusieurs signaux sociaux indépendants.
+    if len(telegram_events) >= 2:
+        score += 8
+    elif len(telegram_events) == 1:
+        score += 2
+
+    # Fraîcheur.
+    ages = []
+    for signal in cluster["signals"]:
+        if signal.get("age_minutes") is not None:
+            ages.append(signal["age_minutes"])
+        else:
+            dt = parse_iso_date(signal.get("date", ""))
+            age = age_minutes(dt)
+            if age is not None:
+                ages.append(age)
+
+    if ages:
+        youngest = min(ages)
+        if youngest <= 5:
+            score += 8
+        elif youngest <= 15:
+            score += 5
+        elif youngest <= 30:
+            score += 2
+
+    return score
 
 
-# ============================================================
-# DÉDOUBLONNAGE DES POSTS DU MÊME RUN
-# ============================================================
+def same_cluster(a, b):
+    # Le clustering ne cherche pas un mot-clé.
+    # Il cherche si deux signaux décrivent suffisamment le même objet.
+    ta = event_text(a)
+    tb = event_text(b)
 
-def same_event(
-    post1,
-    post2
-):
+    sim = similarity(ta, tb)
 
-    signature1 = event_signature(
-        post1
-    )
-
-    signature2 = event_signature(
-        post2
-    )
-
-    if (
-        signature1
-        and signature2
-        and signature1 == signature2
-    ):
-
+    if sim >= 0.34:
         return True
+
+    # Un signal GDELT peut être rapproché d'un post Telegram
+    # si le lieu / acteurs principaux sont communs.
+    location_a = (
+        a.get("location")
+        or a.get("country")
+        or ""
+    ).lower()
+
+    location_b = (
+        b.get("location")
+        or b.get("country")
+        or ""
+    ).lower()
+
+    if location_a and location_b:
+        if location_a in tb.lower() or location_b in ta.lower():
+            return sim >= 0.15
 
     return False
 
 
-# ============================================================
-# SÉLECTION FINALE
-# ============================================================
+def build_clusters(signals):
+    clusters = []
 
-def select_flash_events(posts):
-
-    candidates = []
-
-    for post in posts:
-
-        if not is_flash_recent(
-            post
-        ):
-            continue
-
-        if not is_flash_candidate(
-            post
-        ):
-            continue
-
-        candidates.append(
-            post
-        )
-
-    print(
-        f"{len(candidates)} candidats "
-        "après filtres."
+    # On enrichit les événements GDELT avec le contexte source
+    # uniquement pour les meilleurs événements, afin de limiter
+    # les requêtes HTTP.
+    gdelt_sorted = sorted(
+        [
+            x for x in signals
+            if x["kind"] == "gdelt"
+        ],
+        key=lambda x: (
+            x.get("sources", 0),
+            x.get("mentions", 0),
+            -x.get("age_minutes", 9999)
+        ),
+        reverse=True
     )
 
-    previous_events = load_event_state()
+    # Les 60 événements GDELT les plus propagés sont les seuls
+    # à recevoir une récupération de titre/contexte.
+    for event in gdelt_sorted[:60]:
+        event["context"] = get_page_context(
+            event.get("link", "")
+        )
 
-    selected = []
+    # Telegram reste intégralement conservé comme signal social.
+    telegram_signals = [
+        x for x in signals
+        if x["kind"] == "telegram"
+    ]
 
-    for post in candidates:
+    all_signals = gdelt_sorted[:60] + telegram_signals
 
-        if event_already_sent(
-            post,
-            previous_events
-        ):
-            continue
+    for signal in all_signals:
+        placed = False
 
-        duplicate = False
-
-        for existing in selected:
-
-            if same_event(
-                post,
-                existing
+        for cluster in clusters:
+            if any(
+                same_cluster(signal, existing)
+                for existing in cluster["signals"]
             ):
-
-                duplicate = True
+                cluster["signals"].append(signal)
+                placed = True
                 break
 
-        if not duplicate:
+        if not placed:
+            clusters.append({
+                "signals": [signal]
+            })
 
-            selected.append(
-                post
+    for cluster in clusters:
+        cluster["score"] = cluster_score(cluster)
+
+    clusters.sort(
+        key=lambda x: x["score"],
+        reverse=True
+    )
+
+    return clusters
+
+
+# ============================================================
+# SÉLECTION DES VRAIS FLASH
+# ============================================================
+
+def select_flash_clusters(clusters):
+    selected = []
+
+    previous = load_json_list(EVENT_FILE)
+    now = datetime.now(timezone.utc)
+
+    recent_keys = set()
+
+    for item in previous:
+        dt = parse_iso_date(item.get("date", ""))
+        if not dt:
+            continue
+
+        if 0 <= (now - dt).total_seconds() / 3600 <= EVENT_MEMORY_HOURS:
+            recent_keys.add(
+                item.get("fingerprint", "")
             )
+
+    for cluster in clusters:
+        if cluster["score"] < 18:
+            continue
+
+        signals = cluster["signals"]
+
+        # Un seul canal Telegram ne suffit plus.
+        telegram_sources = {
+            x.get("source")
+            for x in signals
+            if x["kind"] == "telegram"
+        }
+
+        gdelt_sources = max(
+            [
+                x.get("sources", 0)
+                for x in signals
+                if x["kind"] == "gdelt"
+            ],
+            default=0
+        )
+
+        # Un événement GDELT doit montrer une propagation
+        # mesurable OU être corroboré par plusieurs signaux sociaux.
+        propagated = (
+            gdelt_sources >= 2
+            or len(telegram_sources) >= 2
+        )
+
+        if not propagated:
+            continue
+
+        fingerprint = make_cluster_fingerprint(cluster)
+
+        if fingerprint in recent_keys:
+            continue
+
+        cluster["fingerprint"] = fingerprint
+        selected.append(cluster)
+
+        if len(selected) >= 5:
+            break
 
     return selected
 
 
+def make_cluster_fingerprint(cluster):
+    pieces = []
+
+    for signal in cluster["signals"]:
+        if signal["kind"] == "gdelt":
+            pieces.extend([
+                signal.get("actor1", ""),
+                signal.get("actor2", ""),
+                signal.get("location", ""),
+                signal.get("country", ""),
+            ])
+        else:
+            pieces.append(signal.get("text", ""))
+
+    words = sorted(
+        normalize_words(" ".join(pieces))
+    )
+
+    return "|".join(words[:18])
+
+
 # ============================================================
-# GEMINI : TRADUCTION + CONDENSATION UNIQUEMENT
+# GEMINI — TRADUCTION + CONDENSATION UNIQUEMENT
 # ============================================================
 
-def shorten_flash_with_gemini(
-    source_text
-):
-
+def shorten_flash_with_gemini(source_text):
     prompt = f"""
-Tu es uniquement un traducteur-résumeur pour un flux FLASH géopolitique.
+Tu es uniquement un traducteur-résumeur pour un flux FLASH.
 
 SOURCE :
 {source_text}
 
 RÈGLES ABSOLUES :
-
 - Traduis en français.
 - Ne rajoute aucune information.
 - Ne complète aucune information.
@@ -1219,14 +794,13 @@ RÈGLES ABSOLUES :
 - Ne vérifie pas l'information.
 - Ne donne aucun contexte extérieur.
 - Ne transforme jamais une information incertaine en fait certain.
-- Conserve les formulations telles que "selon", "aurait", "des informations font état de", etc.
+- Conserve "selon", "aurait", "des informations font état de", etc.
 - Garde uniquement l'événement principal.
-- Titre de 1 à 4 mots.
+- Titre de 1 à 5 mots.
 - Résumé de 1 ou 2 phrases très courtes.
-- Le titre doit reprendre uniquement un lieu ou sujet explicitement présent dans SOURCE.
-- Si aucun lieu ou sujet clair n'est présent, utilise exactement : ÉVÉNEMENT
+- Le titre doit utiliser uniquement des éléments présents dans SOURCE.
 
-Réponds EXACTEMENT :
+Réponds exactement :
 
 TITRE: [titre]
 RESUME: [résumé]
@@ -1235,18 +809,14 @@ Aucun autre texte.
 """
 
     payload = {
-        "contents": [
-            {
-                "parts": [
-                    {
-                        "text": prompt
-                    }
-                ]
-            }
-        ],
+        "contents": [{
+            "parts": [{
+                "text": prompt
+            }]
+        }],
         "generationConfig": {
             "temperature": 0.0,
-            "maxOutputTokens": 120
+            "maxOutputTokens": 140
         }
     }
 
@@ -1259,27 +829,20 @@ Aucun autre texte.
 
     request = urllib.request.Request(
         url,
-        data=json.dumps(
-            payload
-        ).encode("utf-8"),
+        data=json.dumps(payload).encode("utf-8"),
         headers={
-            "Content-Type":
-                "application/json"
+            "Content-Type": "application/json"
         },
         method="POST"
     )
 
     try:
-
         with urllib.request.urlopen(
             request,
             timeout=30
         ) as response:
-
             result = json.loads(
-                response.read().decode(
-                    "utf-8"
-                )
+                response.read().decode("utf-8")
             )
 
         text = (
@@ -1292,93 +855,151 @@ Aucun autre texte.
             r"(?im)^TITRE:\s*(.+)$",
             text
         )
-
         summary_match = re.search(
             r"(?im)^RESUME:\s*(.+)$",
             text
         )
 
-        if (
-            not title_match
-            or not summary_match
-        ):
-
+        if not title_match or not summary_match:
             raise ValueError(
                 "Format Gemini FLASH inattendu"
             )
 
         return {
-            "title":
-                title_match.group(1).strip(),
-
-            "summary":
-                summary_match.group(1).strip(),
+            "title": title_match.group(1).strip(),
+            "summary": summary_match.group(1).strip(),
         }
 
-    except Exception as e:
-
-        print(
-            "ERREUR GEMINI FLASH :",
-            e
-        )
-
+    except Exception as exc:
+        print("ERREUR GEMINI FLASH :", exc)
         return {
-            "title":
-                "ÉVÉNEMENT",
-
-            "summary":
-                source_text,
+            "title": "ÉVÉNEMENT",
+            "summary": source_text[:500],
         }
 
 
 # ============================================================
-# HEURE AFFICHÉE
+# CONSTRUCTION DU TEXTE SOURCE
 # ============================================================
 
-def format_flash_time(
-    date_string
-):
+def build_cluster_source(cluster):
+    # Priorité à un signal GDELT avec plusieurs sources.
+    gdelt = sorted(
+        [
+            x for x in cluster["signals"]
+            if x["kind"] == "gdelt"
+        ],
+        key=lambda x: (
+            x.get("sources", 0),
+            x.get("mentions", 0)
+        ),
+        reverse=True
+    )
 
-    try:
+    telegram = [
+        x for x in cluster["signals"]
+        if x["kind"] == "telegram"
+    ]
 
-        dt = parse_post_datetime(
-            date_string
+    parts = []
+
+    if gdelt:
+        best = gdelt[0]
+
+        parts.append(
+            "SOURCE GDELT\n"
+            f"Acteur 1: {best.get('actor1', '')}\n"
+            f"Acteur 2: {best.get('actor2', '')}\n"
+            f"Lieu: {best.get('location', '')}\n"
+            f"Pays: {best.get('country', '')}\n"
+            f"Mentions: {best.get('mentions', 0)}\n"
+            f"Sources distinctes: {best.get('sources', 0)}\n"
+            f"Articles: {best.get('articles', 0)}\n"
+            f"Contexte: {best.get('context', '')}\n"
+            f"URL: {best.get('link', '')}"
         )
 
-        if dt is None:
-            return date_string
+    if telegram:
+        for post in telegram[:3]:
+            parts.append(
+                "SIGNAL SOCIAL TELEGRAM\n"
+                f"Source: {post.get('source', '')}\n"
+                f"Texte: {post.get('text', '')}\n"
+                f"URL: {post.get('link', '')}"
+            )
 
-        return dt.astimezone().strftime(
-            "%H:%M"
-        )
-
-    except Exception:
-
-        return date_string
+    return "\n\n".join(parts)
 
 
 # ============================================================
 # ENVOI TELEGRAM
 # ============================================================
 
-def send_flash(post):
+def format_time(date_string):
+    dt = parse_iso_date(date_string)
+    if dt is None:
+        return date_string
 
-    result = shorten_flash_with_gemini(
-        post["text"]
-    )
+    return dt.astimezone().strftime("%H:%M")
+
+
+def send_flash(cluster):
+    source = build_cluster_source(cluster)
+
+    result = shorten_flash_with_gemini(source)
 
     title = result["title"]
     summary = result["summary"]
 
-    text = (
-        f"🔴 <b>FLASH — "
-        f"{title.upper()}</b>\n\n"
-        f"{summary}\n\n"
-        f"🕒 {format_flash_time(post['date'])}\n"
-        f"📡 {post['channel']}\n"
-        f"🔗 <a href=\"{post['link']}\">"
-        f"Source originale</a>"
+    primary = next(
+        (
+            x for x in cluster["signals"]
+            if x["kind"] == "gdelt"
+            and x.get("link")
+        ),
+        None
     )
+
+    if primary is None:
+        primary = next(
+            (
+                x for x in cluster["signals"]
+                if x.get("link")
+            ),
+            None
+        )
+
+    link = (
+        primary.get("link")
+        if primary
+        else ""
+    )
+
+    latest_date = max(
+        [
+            x.get("date", "")
+            for x in cluster["signals"]
+        ]
+        or [""]
+    )
+
+    sources = sorted({
+        x.get("source", "")
+        for x in cluster["signals"]
+        if x.get("source")
+    })
+
+    text = (
+        f"🔴 <b>FLASH — {title.upper()}</b>\n\n"
+        f"{summary}\n\n"
+        f"🕒 {format_time(latest_date)}\n"
+        f"📡 {', '.join(sources)}\n"
+    )
+
+    if link:
+        text += (
+            f'🔗 <a href="{link}">Source originale</a>'
+        )
 
     url = (
         "https://api.telegram.org/bot"
@@ -1386,17 +1007,10 @@ def send_flash(post):
     )
 
     data = urllib.parse.urlencode({
-        "chat_id":
-            TELEGRAM_CHAT_ID,
-
-        "text":
-            text,
-
-        "parse_mode":
-            "HTML",
-
-        "disable_web_page_preview":
-            "true",
+        "chat_id": TELEGRAM_CHAT_ID,
+        "text": text,
+        "parse_mode": "HTML",
+        "disable_web_page_preview": "true",
     }).encode("utf-8")
 
     request = urllib.request.Request(
@@ -1405,69 +1019,33 @@ def send_flash(post):
         method="POST"
     )
 
-    try:
+    with urllib.request.urlopen(
+        request,
+        timeout=30
+    ) as response:
+        response.read()
 
-        with urllib.request.urlopen(
-            request,
-            timeout=30
-        ) as response:
+    events = load_json_list(EVENT_FILE)
 
-            response.read()
+    events.append({
+        "fingerprint": cluster["fingerprint"],
+        "date": latest_date,
+        "score": cluster["score"],
+        "sources": sources,
+    })
 
-        # ----------------------------------------------------
-        # IMPORTANT :
-        # l'événement n'est mémorisé qu'après
-        # un envoi Telegram réussi.
-        # ----------------------------------------------------
+    save_json_list(
+        EVENT_FILE,
+        events,
+        limit=200
+    )
 
-        events = load_event_state()
-
-        events.append({
-            "signature":
-                event_signature(post),
-
-            "date":
-                post.get(
-                    "date",
-                    ""
-                ),
-
-            "channel":
-                post.get(
-                    "channel",
-                    ""
-                ),
-
-            "post_id":
-                post.get(
-                    "post_id",
-                    ""
-                ),
-        })
-
-        save_event_state(
-            events
-        )
-
-        print(
-            "FLASH envoyé :",
-            post["channel"],
-            post["post_id"]
-        )
-
-    except urllib.error.HTTPError as e:
-
-        error_body = e.read().decode(
-            "utf-8",
-            errors="replace"
-        )
-
-        print(
-            "ERREUR TELEGRAM :",
-            error_body
-        )
-
-        raise
+    print(
+        "FLASH envoyé | score=",
+        cluster["score"],
+        "| sources=",
+        ", ".join(sources)
+    )
 
 
 # ============================================================
@@ -1475,29 +1053,57 @@ def send_flash(post):
 # ============================================================
 
 def main():
+    print("=== FLASH TREND RADAR ===")
 
-    posts = get_new_posts()
+    telegram_posts = get_telegram_posts()
 
-    print(
-        f"{len(posts)} nouveaux posts détectés."
-    )
-
-    flash_events = select_flash_events(
-        posts
-    )
-
-    print(
-        f"{len(flash_events)} événements "
-        "FLASH retenus."
-    )
-
-    for post in flash_events:
-
-        send_flash(
-            post
+    # Fraîcheur Telegram.
+    telegram_posts = [
+        post for post in telegram_posts
+        if (
+            age_minutes(
+                parse_iso_date(
+                    post.get("date", "")
+                )
+            ) is not None
+            and 0 <= age_minutes(
+                parse_iso_date(
+                    post.get("date", "")
+                )
+            ) <= MAX_TELEGRAM_AGE_MINUTES
         )
+    ]
+
+    gdelt_events = read_gdelt_events()
+
+    signals = gdelt_events + telegram_posts
+
+    print(
+        "Signaux récents:",
+        len(signals)
+    )
+
+    if not signals:
+        print("Aucun signal récent.")
+        return
+
+    clusters = build_clusters(signals)
+
+    print(
+        "Clusters:",
+        len(clusters)
+    )
+
+    selected = select_flash_clusters(clusters)
+
+    print(
+        "FLASH retenus:",
+        len(selected)
+    )
+
+    for cluster in selected:
+        send_flash(cluster)
 
 
 if __name__ == "__main__":
-
     main()
