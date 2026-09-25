@@ -1295,5 +1295,31 @@
     "sources": [
       "clickorlando.com"
     ]
+  },
+  {
+    "fingerprint": "assembly|france|general|1456928|alarm|assembly|becoming|charade|crisis|dangers|during|france|general|humanity|lateral|losing|multi|news|organisations|paris|pontiff|pope|risks|sounds|visit|warned",
+    "identity": "FRANCE UN GENERAL ASSEMBLY -1456928 4 Pope Leo says UN risks becoming 'charade' as he sounds alarm over AI - ABC News — During a visit to Paris, the pontiff warned of the dangers of \"losing our humanity\" to AI and that multi-lateral organisations may be in crisis. UN GENERAL ASSEMBLY FRANCE -1456928 4 Pope Leo says UN risks becoming 'charade' as he sounds alarm over AI - ABC News — During a visit to Paris, the pontiff warned of the dangers of \"losing our humanity\" to AI and that multi-lateral organisations may be in crisis.",
+    "actors": "FRANCE UN GENERAL ASSEMBLY UN GENERAL ASSEMBLY FRANCE",
+    "country": "France",
+    "title": "Pape Léon : mise en garde contre l'IA à Paris",
+    "summary": "En visite à Paris, le pape Léon a mis en garde contre la perte de notre humanité face à l'intelligence artificielle et a estimé que l'ONU risquait de devenir une \"mascarade\".",
+    "date": "2026-09-25T17:15:00+00:00",
+    "score": 31,
+    "sources": [
+      "abc.net.au"
+    ]
+  },
+  {
+    "fingerprint": "company|531871|anthropic|appeals|chain|challenge|company|court|federal|government|label|labeling|pentagon|rejected|risk|supply",
+    "identity": " COMPANY 531871 3 Federal court says US government can label Anthropic a supply chain risk — A federal appeals court has rejected Anthropic's challenge to the Pentagon's labeling of it as a supply chain risk. COMPANY   3 Federal court says US government can label Anthropic a supply chain risk — A federal appeals court has rejected Anthropic's challenge to the Pentagon's labeling of it as a supply chain risk.",
+    "actors": "COMPANY COMPANY",
+    "country": "États-Unis",
+    "title": "États-Unis : Anthropic perd son recours contre le Pentagone",
+    "summary": "Une cour d'appel fédérale a rejeté la contestation d'Anthropic, confirmant le droit du gouvernement américain à qualifier l'entreprise de risque pour la chaîne d'approvisionnement.",
+    "date": "2026-09-25T17:15:00+00:00",
+    "score": 25,
+    "sources": [
+      "wsls.com"
+    ]
   }
 ]
