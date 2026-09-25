@@ -183,5 +183,45 @@
     "date": "2026-09-25T06:59:42+00:00",
     "channel": "GeoConfirmed",
     "post_id": "csources/527479"
+  },
+  {
+    "fingerprint": "2403010|asean|malaysia",
+    "date": "2026-09-25T07:45:00+00:00",
+    "score": 25,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "620571|ethiopia|rebel",
+    "date": "2026-09-25T07:45:00+00:00",
+    "score": 25,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "military",
+    "date": "2026-09-25T07:45:00+00:00",
+    "score": 25,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "company",
+    "date": "2026-09-25T07:45:00+00:00",
+    "score": 25,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "1898541|537956|states|taiwan|united",
+    "date": "2026-09-25T07:45:00+00:00",
+    "score": 25,
+    "sources": [
+      "GDELT Events"
+    ]
   }
 ]
