@@ -623,5 +623,45 @@
     "sources": [
       "GDELT Events"
     ]
+  },
+  {
+    "fingerprint": "nigeria",
+    "date": "2026-09-25T09:30:00+00:00",
+    "score": 16,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "nations|president|united",
+    "date": "2026-09-25T09:30:00+00:00",
+    "score": 16,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "2601889|company|investor",
+    "date": "2026-09-25T09:30:00+00:00",
+    "score": 16,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "governance",
+    "date": "2026-09-25T09:30:00+00:00",
+    "score": 16,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "administration",
+    "date": "2026-09-25T09:30:00+00:00",
+    "score": 16,
+    "sources": [
+      "GDELT Events"
+    ]
   }
 ]
