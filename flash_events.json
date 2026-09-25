@@ -703,5 +703,45 @@
     "sources": [
       "GDELT Events"
     ]
+  },
+  {
+    "fingerprint": "2092174|hindu",
+    "date": "2026-09-25T10:00:00+00:00",
+    "score": 25,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "states|united",
+    "date": "2026-09-25T10:00:00+00:00",
+    "score": 25,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "austria|citizen",
+    "date": "2026-09-25T10:00:00+00:00",
+    "score": 19,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "malta",
+    "date": "2026-09-25T10:00:00+00:00",
+    "score": 19,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "1456928|1924465|ambassador|china|european|luxembourg|minist|paris",
+    "date": "2026-09-25T10:00:00+00:00",
+    "score": 19,
+    "sources": [
+      "GDELT Events"
+    ]
   }
 ]
