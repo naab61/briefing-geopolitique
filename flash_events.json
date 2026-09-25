@@ -583,5 +583,45 @@
     "sources": [
       "GDELT Events"
     ]
+  },
+  {
+    "fingerprint": "house|iran|israel|states|united|venezuela|venezuelan|white",
+    "date": "2026-09-25T09:30:00+00:00",
+    "score": 25,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "2960561|africa|army|government|member|parliament|russia|russian|swiss|switzerland|ukraine|voter",
+    "date": "2026-09-25T09:30:00+00:00",
+    "score": 25,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "2705195|azerbaijan|business",
+    "date": "2026-09-25T09:30:00+00:00",
+    "score": 19,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "dublin",
+    "date": "2026-09-25T09:30:00+00:00",
+    "score": 19,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "prosecutor",
+    "date": "2026-09-25T09:30:00+00:00",
+    "score": 19,
+    "sources": [
+      "GDELT Events"
+    ]
   }
 ]
