@@ -271,8 +271,8 @@ GDELT = {
     "avg_tone": 34,
     "action_geo": 50,
     "action_country": 51,
-    "date_added": 56,
-    "source_url": 57,
+    "date_added": 59,
+    "source_url": 60,
 }
 
 
@@ -464,7 +464,7 @@ class PageMetaParser(HTMLParser):
 
 
 def get_page_context(url):
-    if not url:
+    if not url or not str(url).startswith(("http://", "https://")):
         return ""
 
     try:
@@ -1082,9 +1082,10 @@ def send_flash(cluster):
         f"📡 {', '.join(sources)}\n"
     )
 
-    if link:
+    if link and str(link).startswith(("http://", "https://")):
+        safe_link = link.replace("&", "&amp;").replace('"', "&quot;")
         text += (
-            f'🔗 <a href="{link}">Source originale</a>'
+            f'🔗 <a href="{safe_link}">Ouvrir la source originale</a>'
         )
 
     url = (
