@@ -39,6 +39,8 @@ GDELT_FILE = "flash_gdelt_seen.json"
 MAX_TELEGRAM_AGE_MINUTES = 30
 MAX_EVENT_AGE_MINUTES = 180
 EVENT_MEMORY_HOURS = 12
+MAX_FLASHES_PER_RUN = 2
+PARIS_TZ = ZoneInfo("Europe/Paris")
 
 TELEGRAM_CHANNELS = [
     {"name": "OSINTdefender", "channel": "osintdefender"},
@@ -630,48 +632,42 @@ def cluster_score(cluster):
 
 
 def same_cluster(a, b):
-    # Le clustering ne cherche pas un mot-clé.
-    # Il cherche si deux signaux décrivent suffisamment le même événement.
-    # Un même lien source est un indicateur très fort : on fusionne immédiatement.
-    link_a = str(a.get("link", "")).strip()
-    link_b = str(b.get("link", "")).strip()
-    if link_a and link_b and link_a == link_b:
-        return True
+    # Un même événement doit être regroupé sans fusionner
+    # des informations seulement parce qu'elles partagent
+    # quelques mots génériques.
+    if a.get("kind") == "gdelt" and b.get("kind") == "gdelt":
+        ua = str(a.get("link") or "").strip()
+        ub = str(b.get("link") or "").strip()
+        if ua and ub and ua == ub:
+            return True
+
+        ca = str(a.get("country") or "").strip().lower()
+        cb = str(b.get("country") or "").strip().lower()
+        la = str(a.get("location") or "").strip().lower()
+        lb = str(b.get("location") or "").strip().lower()
+
+        # Même pays + lieu commun + similarité suffisante.
+        if ca and cb and ca == cb:
+            sim = similarity(event_text(a), event_text(b))
+            if la and lb and (la in lb or lb in la) and sim >= 0.22:
+                return True
+            if sim >= 0.52:
+                return True
+        return False
 
     ta = event_text(a)
     tb = event_text(b)
     sim = similarity(ta, tb)
-
-    if sim >= 0.34:
+    if sim >= 0.55:
         return True
 
-    # Les contextes éditoriaux (titre + description de la source) sont
-    # beaucoup plus utiles que les seuls codes/acteurs GDELT pour fusionner
-    # plusieurs lignes qui décrivent le même événement.
-    ca = a.get("context", "")
-    cb = b.get("context", "")
-    if ca and cb and similarity(ca, cb) >= 0.28:
-        return True
-
-    # Même personne/acteur distinctif + même pays : seuil plus souple.
-    actors_a = normalize_words(" ".join([a.get("actor1", ""), a.get("actor2", "")]))
-    actors_b = normalize_words(" ".join([b.get("actor1", ""), b.get("actor2", "")]))
-    shared_actors = actors_a & actors_b
-    if shared_actors and len(shared_actors) >= 1:
-        country_a = (a.get("country") or "").lower()
-        country_b = (b.get("country") or "").lower()
-        if country_a and country_b and country_a == country_b:
-            return sim >= 0.12 or bool(ca and cb and similarity(ca, cb) >= 0.12)
-
-    # Un signal GDELT peut être rapproché d'un post Telegram
-    # si le lieu / pays est explicitement commun.
-    location_a = (a.get("location") or a.get("country") or "").lower()
-    location_b = (b.get("location") or b.get("country") or "").lower()
-
+    # Pour Telegram/GDELT, on exige un pays ou lieu partagé
+    # avant d'accepter une similarité faible.
+    location_a = str(a.get("location") or a.get("country") or "").lower()
+    location_b = str(b.get("location") or b.get("country") or "").lower()
     if location_a and location_b:
         if location_a in tb.lower() or location_b in ta.lower():
-            return sim >= 0.15
-
+            return sim >= 0.25
     return False
 
 
@@ -799,8 +795,8 @@ def select_flash_clusters(clusters):
         propagated = (
             gdelt_sources >= 2
             or len(telegram_sources) >= 2
-            or gdelt_mentions >= 10
-            or len(telegram_events) >= 2
+            or gdelt_mentions >= 20
+            or len(telegram_events) >= 3
             or (
                 len(telegram_events) >= 2
                 and len(telegram_sources) == 1
@@ -831,7 +827,17 @@ def select_flash_clusters(clusters):
             propagated
         )
 
-        if cluster["score"] < 14:
+        # Un cluster composé uniquement d'une ligne GDELT ne suffit jamais.
+        gdelt_valid_links = {
+            str(x.get("link") or "").strip()
+            for x in signals
+            if x.get("kind") == "gdelt" and str(x.get("link") or "").startswith(("http://", "https://"))
+        }
+        if not telegram_events and len(gdelt_valid_links) < 2 and gdelt_sources < 2:
+            print("  -> REJET: pas de sources indépendantes suffisantes")
+            continue
+
+        if cluster["score"] < 16:
             print("  -> REJET: score trop faible")
             continue
 
@@ -848,23 +854,10 @@ def select_flash_clusters(clusters):
         cluster["fingerprint"] = fingerprint
         selected.append(cluster)
 
-        if len(selected) >= 3:
+        if len(selected) >= MAX_FLASHES_PER_RUN:
             break
 
-    # Défense supplémentaire : même après le clustering, deux clusters
-    # quasi identiques ne doivent jamais produire deux FLASH consécutifs.
-    deduped = []
-    for candidate in selected:
-        candidate_text = event_text(candidate["signals"][0])
-        if any(
-            similarity(candidate_text, event_text(existing["signals"][0])) >= 0.55
-            for existing in deduped
-        ):
-            print("  -> REJET: cluster quasi identique à un FLASH déjà retenu")
-            continue
-        deduped.append(candidate)
-
-    return deduped
+    return selected
 
 
 def make_cluster_fingerprint(cluster):
@@ -894,158 +887,125 @@ def make_cluster_fingerprint(cluster):
 
 def shorten_flash_with_gemini(source_text):
     prompt = f"""
-Tu es uniquement un traducteur-résumeur pour un flux FLASH.
+Tu es le filtre éditorial d'un radar mondial de breaking news.
 
 SOURCE :
 {source_text}
 
-RÈGLES ABSOLUES :
-- Traduis en français.
-- Ne rajoute aucune information.
-- Ne complète aucune information.
-- Ne déduis rien.
-- Ne fais aucune analyse.
-- Ne vérifie pas l'information.
-- Ne donne aucun contexte extérieur.
-- Ne transforme jamais une information incertaine en fait certain.
-- Conserve "selon", "aurait", "des informations font état de", etc.
-- Garde uniquement l'événement principal.
-- Si SOURCE contient un pays ou un code pays, indique le nom du pays en français dans le résumé et, si pertinent, dans le titre.
-- Si SOURCE contient un code ISO de pays (ex. IR, FR, US), transforme-le en nom français sans inventer d'autre information.
-- Ne produis jamais un titre composé uniquement d'acteurs vagues ou de codes.
-- Titre de 2 à 6 mots, lisible immédiatement.
-- Résumé de 1 ou 2 phrases très courtes.
-- La première phrase doit préciser le pays ou le lieu quand cette information est disponible dans SOURCE.
-- Le titre doit utiliser uniquement des éléments présents dans SOURCE.
+Décide d'abord si cela mérite réellement un FLASH immédiat.
 
-Réponds exactement :
+REFUSE (REPONSE: NON) si c'est :
+- une déclaration ou demande politique ordinaire sans événement nouveau majeur ;
+- une visite, réunion ou annonce institutionnelle de routine ;
+- un petit contrat, partenariat, protocole ou accord universitaire/commercial ;
+- une analyse, opinion, commentaire ou résumé d'actualité ;
+- une information provenant d'une seule source ou d'une seule occurrence ;
+- un élément ambigu, mal compris ou insuffisamment documenté ;
+- quelque chose dont l'importance mondiale ou nationale est faible.
 
-TITRE: [titre]
-RESUME: [résumé]
+ACCEPTE seulement si les sources montrent le même événement nouveau et significatif,
+avec une propagation réelle ou un impact potentiellement important maintenant.
 
-Aucun autre texte.
+Important : plusieurs lignes provenant du même article ne comptent que comme UNE source.
+
+Si REFUS : réponds exactement :
+NON
+
+Sinon, réponds exactement :
+OUI
+TITRE: [3 à 7 mots, pays ou lieu si connu]
+RESUME: [1 ou 2 phrases courtes, factuelles, compréhensibles sans contexte]
+PAYS: [pays ou lieu principal]
+
+Ne rajoute aucun autre texte.
 """
-
-    payload = {
-        "contents": [{
-            "parts": [{
-                "text": prompt
-            }]
-        }],
-        "generationConfig": {
-            "temperature": 0.0,
-            "maxOutputTokens": 140
-        }
-    }
-
-    url = (
-        "https://generativelanguage.googleapis.com/"
-        "v1beta/models/"
-        "gemini-3.5-flash-lite:generateContent?key="
-        + GEMINI_API_KEY
-    )
-
-    request = urllib.request.Request(
-        url,
-        data=json.dumps(payload).encode("utf-8"),
-        headers={
-            "Content-Type": "application/json"
-        },
-        method="POST"
-    )
-
+    payload={"contents":[{"parts":[{"text":prompt}]}],"generationConfig":{"temperature":0.0,"maxOutputTokens":180}}
+    url=("https://generativelanguage.googleapis.com/"
+         "v1beta/models/gemini-3.5-flash-lite:generateContent?key="+GEMINI_API_KEY)
+    request=urllib.request.Request(url,data=json.dumps(payload).encode("utf-8"),headers={"Content-Type":"application/json"},method="POST")
     try:
-        with urllib.request.urlopen(
-            request,
-            timeout=30
-        ) as response:
-            result = json.loads(
-                response.read().decode("utf-8")
-            )
-
-        text = (
-            result["candidates"][0]
-            ["content"]["parts"][0]["text"]
-            .strip()
-        )
-
-        title_match = re.search(
-            r"(?im)^TITRE:\s*(.+)$",
-            text
-        )
-        summary_match = re.search(
-            r"(?im)^RESUME:\s*(.+)$",
-            text
-        )
-
-        if not title_match or not summary_match:
-            raise ValueError(
-                "Format Gemini FLASH inattendu"
-            )
-
-        return {
-            "title": title_match.group(1).strip(),
-            "summary": summary_match.group(1).strip(),
-        }
-
+        with urllib.request.urlopen(request,timeout=30) as response:
+            result=json.loads(response.read().decode("utf-8"))
+        text=result["candidates"][0]["content"]["parts"][0]["text"].strip()
+        if re.search(r"(?im)^NON\s*$", text):
+            return None
+        title=re.search(r"(?im)^TITRE:\s*(.+)$",text)
+        summary=re.search(r"(?im)^RESUME:\s*(.+)$",text)
+        country=re.search(r"(?im)^PAYS:\s*(.+)$",text)
+        if not title or not summary:
+            raise ValueError("Format Gemini FLASH inattendu")
+        return {"title":title.group(1).strip(),"summary":summary.group(1).strip(),"country":country.group(1).strip() if country else ""}
     except Exception as exc:
-        print("ERREUR GEMINI FLASH :", exc)
-        return {
-            "title": "ÉVÉNEMENT",
-            "summary": source_text[:500],
-        }
+        print("ERREUR GEMINI FLASH :",exc)
+        return None
 
 
 # ============================================================
 # CONSTRUCTION DU TEXTE SOURCE
 # ============================================================
 
+COUNTRY_NAMES = {
+    "AF":"Afghanistan","AL":"Albanie","DZ":"Algérie","AR":"Argentine",
+    "AM":"Arménie","AU":"Australie","AT":"Autriche","AZ":"Azerbaïdjan",
+    "BH":"Bahreïn","BD":"Bangladesh","BY":"Biélorussie","BE":"Belgique",
+    "BO":"Bolivie","BA":"Bosnie-Herzégovine","BR":"Brésil","BG":"Bulgarie",
+    "CA":"Canada","CL":"Chili","CN":"Chine","CO":"Colombie","HR":"Croatie",
+    "CU":"Cuba","CY":"Chypre","CZ":"Tchéquie","CD":"RDC","DK":"Danemark",
+    "EG":"Égypte","EE":"Estonie","ET":"Éthiopie","FI":"Finlande","FR":"France",
+    "GE":"Géorgie","DE":"Allemagne","GH":"Ghana","GR":"Grèce","HU":"Hongrie",
+    "IS":"Islande","IN":"Inde","ID":"Indonésie","IR":"Iran","IQ":"Irak",
+    "IE":"Irlande","IL":"Israël","IT":"Italie","JP":"Japon","JO":"Jordanie",
+    "KZ":"Kazakhstan","KE":"Kenya","KR":"Corée du Sud","KW":"Koweït",
+    "LV":"Lettonie","LB":"Liban","LY":"Libye","LT":"Lituanie","LU":"Luxembourg",
+    "MY":"Malaisie","MT":"Malte","MX":"Mexique","MD":"Moldavie","MN":"Mongolie",
+    "MA":"Maroc","MZ":"Mozambique","MM":"Myanmar","NP":"Népal","NL":"Pays-Bas",
+    "NZ":"Nouvelle-Zélande","NG":"Nigeria","KP":"Corée du Nord","NO":"Norvège",
+    "OM":"Oman","PK":"Pakistan","PS":"Palestine","PA":"Panama","PE":"Pérou",
+    "PH":"Philippines","PL":"Pologne","PT":"Portugal","QA":"Qatar","RO":"Roumanie",
+    "RU":"Russie","SA":"Arabie saoudite","RS":"Serbie","SG":"Singapour","SK":"Slovaquie",
+    "SI":"Slovénie","ZA":"Afrique du Sud","ES":"Espagne","LK":"Sri Lanka","SD":"Soudan",
+    "SE":"Suède","CH":"Suisse","SY":"Syrie","TW":"Taïwan","TH":"Thaïlande",
+    "TN":"Tunisie","TR":"Turquie","UA":"Ukraine","AE":"Émirats arabes unis",
+    "GB":"Royaume-Uni","US":"États-Unis","UY":"Uruguay","UZ":"Ouzbékistan",
+    "VE":"Venezuela","VN":"Vietnam","YE":"Yémen","ZM":"Zambie","ZW":"Zimbabwe"
+}
+
+def country_name(code):
+    code = str(code or "").strip().upper()
+    return COUNTRY_NAMES.get(code, code)
+
 def build_cluster_source(cluster):
-    # Priorité à un signal GDELT avec plusieurs sources.
     gdelt = sorted(
-        [
-            x for x in cluster["signals"]
-            if x["kind"] == "gdelt"
-        ],
-        key=lambda x: (
-            x.get("sources", 0),
-            x.get("mentions", 0)
-        ),
+        [x for x in cluster["signals"] if x["kind"] == "gdelt"],
+        key=lambda x: (x.get("sources",0), x.get("mentions",0), x.get("articles",0)),
         reverse=True
     )
-
-    telegram = [
-        x for x in cluster["signals"]
-        if x["kind"] == "telegram"
-    ]
-
+    telegram = [x for x in cluster["signals"] if x["kind"] == "telegram"]
     parts = []
 
-    if gdelt:
-        best = gdelt[0]
-
+    # Plusieurs sources sont envoyées à Gemini : il doit pouvoir distinguer
+    # un vrai événement repris par plusieurs médias d'une simple déclaration.
+    for i, item in enumerate(gdelt[:5], 1):
         parts.append(
-            "SOURCE GDELT\n"
-            f"Acteur 1: {best.get('actor1', '')}\n"
-            f"Acteur 2: {best.get('actor2', '')}\n"
-            f"Lieu: {best.get('location', '')}\n"
-            f"Pays: {best.get('country', '')}\n"
-            f"Mentions: {best.get('mentions', 0)}\n"
-            f"Sources distinctes: {best.get('sources', 0)}\n"
-            f"Articles: {best.get('articles', 0)}\n"
-            f"Contexte: {best.get('context', '')}\n"
-            f"URL: {best.get('link', '')}"
+            f"SOURCE {i}\n"
+            f"Pays: {country_name(item.get('country',''))}\n"
+            f"Lieu: {item.get('location','')}\n"
+            f"Acteur 1: {item.get('actor1','')}\n"
+            f"Acteur 2: {item.get('actor2','')}\n"
+            f"Sources distinctes dans GDELT: {item.get('sources',0)}\n"
+            f"Mentions: {item.get('mentions',0)}\n"
+            f"Articles: {item.get('articles',0)}\n"
+            f"Contexte: {item.get('context','')}\n"
+            f"URL: {item.get('link','')}"
         )
 
-    if telegram:
-        for post in telegram[:3]:
-            parts.append(
-                "SIGNAL SOCIAL TELEGRAM\n"
-                f"Source: {post.get('source', '')}\n"
-                f"Texte: {post.get('text', '')}\n"
-                f"URL: {post.get('link', '')}"
-            )
-
+    for post in telegram[:4]:
+        parts.append(
+            "SIGNAL SOCIAL\n"
+            f"Source: {post.get('source','')}\n"
+            f"Texte: {post.get('text','')}\n"
+            f"URL: {post.get('link','')}"
+        )
     return "\n\n".join(parts)
 
 
@@ -1058,15 +1018,17 @@ def format_time(date_string):
     if dt is None:
         return date_string
 
-    # GitHub Actions tourne généralement en UTC : ne jamais utiliser
-    # astimezone() sans zone explicite. Paris = UTC+2 en été, UTC+1 en hiver.
-    return dt.astimezone(ZoneInfo("Europe/Paris")).strftime("%H:%M")
+    return dt.astimezone(PARIS_TZ).strftime("%H:%M")
 
 
 def send_flash(cluster):
     source = build_cluster_source(cluster)
 
     result = shorten_flash_with_gemini(source)
+
+    if result is None:
+        print("FLASH rejeté par le filtre éditorial Gemini")
+        return False
 
     title = result["title"]
     summary = result["summary"]
