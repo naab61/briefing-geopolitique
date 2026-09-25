@@ -1191,5 +1191,13 @@
     "sources": [
       "GDELT Events"
     ]
+  },
+  {
+    "fingerprint": "american|states|united",
+    "date": "2026-09-25T13:15:00+00:00",
+    "score": 31,
+    "sources": [
+      "GDELT Events"
+    ]
   }
 ]
