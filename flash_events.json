@@ -1119,5 +1119,29 @@
     "sources": [
       "GDELT Events"
     ]
+  },
+  {
+    "fingerprint": "2589399|kingdom|magistrate|police|protester|united",
+    "date": "2026-09-25T12:45:00+00:00",
+    "score": 31,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "glasgow|governance|unions|worker",
+    "date": "2026-09-25T12:45:00+00:00",
+    "score": 31,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "1999832|2019717|africa|politician|president",
+    "date": "2026-09-25T12:45:00+00:00",
+    "score": 25,
+    "sources": [
+      "GDELT Events"
+    ]
   }
 ]
