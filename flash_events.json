@@ -463,5 +463,45 @@
     "sources": [
       "GDELT Events"
     ]
+  },
+  {
+    "fingerprint": "1999832|candidate|governor|nigeria|presidential",
+    "date": "2026-09-25T08:45:00+00:00",
+    "score": 25,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "347695|hospital",
+    "date": "2026-09-25T08:45:00+00:00",
+    "score": 19,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "1153951|romania",
+    "date": "2026-09-25T08:45:00+00:00",
+    "score": 19,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "kingdom|united",
+    "date": "2026-09-25T08:45:00+00:00",
+    "score": 19,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "2562166|africa|criminal|kenya|kenyan|mombasa|tanzania",
+    "date": "2026-09-25T08:45:00+00:00",
+    "score": 19,
+    "sources": [
+      "GDELT Events"
+    ]
   }
 ]
