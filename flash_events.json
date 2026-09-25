@@ -1167,5 +1167,29 @@
     "sources": [
       "GDELT Events"
     ]
+  },
+  {
+    "fingerprint": "residents",
+    "date": "2026-09-25T13:00:00+00:00",
+    "score": 25,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "malta|valetta",
+    "date": "2026-09-25T13:00:00+00:00",
+    "score": 25,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "belgium|netherland",
+    "date": "2026-09-25T13:00:00+00:00",
+    "score": 25,
+    "sources": [
+      "GDELT Events"
+    ]
   }
 ]
