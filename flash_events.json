@@ -1071,5 +1071,29 @@
     "sources": [
       "GDELT Events"
     ]
+  },
+  {
+    "fingerprint": "actor|rajasthan",
+    "date": "2026-09-25T12:00:00+00:00",
+    "score": 25,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "2551235|3101071|arabia|iran|saudi|switzerland",
+    "date": "2026-09-25T12:00:00+00:00",
+    "score": 25,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "2092511|magistrate",
+    "date": "2026-09-25T12:00:00+00:00",
+    "score": 19,
+    "sources": [
+      "GDELT Events"
+    ]
   }
 ]
