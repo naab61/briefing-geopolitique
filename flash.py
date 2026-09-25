@@ -35,8 +35,8 @@ SEEN_FILE = "flash_seen.json"
 EVENT_FILE = "flash_events.json"
 GDELT_FILE = "flash_gdelt_seen.json"
 
-MAX_TELEGRAM_AGE_MINUTES = 120
-MAX_EVENT_AGE_MINUTES = 180
+MAX_TELEGRAM_AGE_MINUTES = 30
+MAX_EVENT_AGE_MINUTES = 45
 EVENT_MEMORY_HOURS = 12
 
 TELEGRAM_CHANNELS = [
@@ -299,6 +299,8 @@ def read_gdelt_events():
     data = http_get(url, timeout=60)
 
     events = []
+    newest_added = None
+    newest_age = None
 
     with zipfile.ZipFile(io.BytesIO(data)) as archive:
         names = archive.namelist()
@@ -326,6 +328,10 @@ def read_gdelt_events():
                 age = age_minutes(added)
                 if age is None:
                     continue
+
+                if newest_age is None or age < newest_age:
+                    newest_age = age
+                    newest_added = added
 
                 # On ne garde que le battement récent.
                 if age < 0 or age > MAX_EVENT_AGE_MINUTES:
@@ -377,6 +383,18 @@ def read_gdelt_events():
         "GDELT événements récents:",
         len(events)
     )
+
+    if newest_added is not None:
+        print(
+            "GDELT événement le plus récent:",
+            newest_added.isoformat(),
+            "| âge_min=",
+            round(newest_age, 1)
+        )
+    else:
+        print(
+            "GDELT diagnostic: aucune DATEADDED exploitable dans le fichier."
+        )
 
     return events
 
@@ -708,17 +726,18 @@ def select_flash_clusters(clusters):
             )
 
     for cluster in clusters:
-        if cluster["score"] < 18:
-            continue
-
         signals = cluster["signals"]
 
-        # Un seul canal Telegram ne suffit plus.
         telegram_sources = {
             x.get("source")
             for x in signals
             if x["kind"] == "telegram"
         }
+
+        telegram_events = [
+            x for x in signals
+            if x["kind"] == "telegram"
+        ]
 
         gdelt_sources = max(
             [
@@ -729,24 +748,54 @@ def select_flash_clusters(clusters):
             default=0
         )
 
-        # Un événement GDELT doit montrer une propagation
-        # mesurable OU être corroboré par plusieurs signaux sociaux.
+        gdelt_mentions = max(
+            [
+                x.get("mentions", 0)
+                for x in signals
+                if x["kind"] == "gdelt"
+            ],
+            default=0
+        )
+
+        # Un FLASH doit montrer une propagation réelle.
+        # Trois formes sont acceptées :
+        #   1) plusieurs canaux sociaux indépendants ;
+        #   2) propagation GDELT mesurable ;
+        #   3) plusieurs posts sociaux concordants, même sur un seul canal.
         propagated = (
             gdelt_sources >= 2
             or len(telegram_sources) >= 2
-            or any(
-                x.get("mentions", 0) >= 10
-                for x in signals
-                if x["kind"] == "gdelt"
-            )
+            or gdelt_mentions >= 10
+            or len(telegram_events) >= 3
         )
 
+        print(
+            "Cluster | score=",
+            cluster["score"],
+            "| telegram=",
+            len(telegram_events),
+            "| canaux=",
+            len(telegram_sources),
+            "| GDELT sources=",
+            gdelt_sources,
+            "| mentions=",
+            gdelt_mentions,
+            "| propagated=",
+            propagated
+        )
+
+        if cluster["score"] < 10:
+            print("  -> REJET: score trop faible")
+            continue
+
         if not propagated:
+            print("  -> REJET: propagation insuffisante")
             continue
 
         fingerprint = make_cluster_fingerprint(cluster)
 
         if fingerprint in recent_keys:
+            print("  -> REJET: événement déjà envoyé")
             continue
 
         cluster["fingerprint"] = fingerprint
