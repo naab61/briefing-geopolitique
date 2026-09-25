@@ -999,5 +999,29 @@
     "sources": [
       "GDELT Events"
     ]
+  },
+  {
+    "fingerprint": "149507|3183740|3191442|assembly|general|israel",
+    "date": "2026-09-25T11:30:00+00:00",
+    "score": 31,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "doctor|hospital|kingdom|united",
+    "date": "2026-09-25T11:30:00+00:00",
+    "score": 25,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "2103026|madhya|pradesh",
+    "date": "2026-09-25T11:30:00+00:00",
+    "score": 20,
+    "sources": [
+      "GDELT Events"
+    ]
   }
 ]
