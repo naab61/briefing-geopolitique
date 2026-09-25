@@ -1095,5 +1095,29 @@
     "sources": [
       "GDELT Events"
     ]
+  },
+  {
+    "fingerprint": "france|police|protester",
+    "date": "2026-09-25T12:30:00+00:00",
+    "score": 31,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "573088|canada|police|website",
+    "date": "2026-09-25T12:30:00+00:00",
+    "score": 25,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "659500|residents",
+    "date": "2026-09-25T12:30:00+00:00",
+    "score": 25,
+    "sources": [
+      "GDELT Events"
+    ]
   }
 ]
