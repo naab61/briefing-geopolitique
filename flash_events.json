@@ -1047,5 +1047,29 @@
     "sources": [
       "GDELT Events"
     ]
+  },
+  {
+    "fingerprint": "531871|atlanta|china|chinese|house|intelligence|states|united|white",
+    "date": "2026-09-25T12:00:00+00:00",
+    "score": 31,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "531871|french|military|personnel",
+    "date": "2026-09-25T12:00:00+00:00",
+    "score": 26,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "democratic|government|italy|party|voter",
+    "date": "2026-09-25T12:00:00+00:00",
+    "score": 25,
+    "sources": [
+      "GDELT Events"
+    ]
   }
 ]
