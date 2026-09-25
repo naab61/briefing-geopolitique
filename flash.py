@@ -12,7 +12,7 @@ from datetime import datetime, timezone, timedelta
 from zoneinfo import ZoneInfo
 
 # ============================================================
-# FLASH RADAR — VERSION "TREND"
+# FLASH RADAR — VERSION "TREND V7 — SOURCES CANONIQUES"
 # ============================================================
 # Principe:
 #   - aucune liste de mots-clés pour décider qu'un FLASH existe
@@ -466,6 +466,88 @@ class PageMetaParser(HTMLParser):
             self.in_title = False
 
 
+AGENCY_MARKERS = (
+    "by reuters",
+    "reuters /",
+    "reuters/",
+    "© reuters",
+    "reuters news agency",
+    "reuters news",
+    "agence reuters",
+    "selon reuters",
+    "d après reuters",
+    "d'apres reuters",
+    "afp",
+    "agence france-presse",
+    "associated press",
+    "ap news",
+    "by the associated press",
+)
+
+AGENCY_DOMAINS = (
+    "reuters.com",
+    "afp.com",
+    "apnews.com",
+    "ap.org",
+)
+
+def detect_agency(event):
+    """Return the canonical news agency behind a signal, if any.
+
+    Direct agency articles are valid sources. A third-party article that
+    explicitly credits an agency is attached to that agency and does not
+    count as an additional independent source.
+    """
+    url = str(event.get("link") or "").lower()
+    context = str(event.get("context") or "").lower()
+
+    domain_map = {
+        "reuters.com": "Reuters",
+        "afp.com": "AFP",
+        "apnews.com": "Associated Press",
+        "ap.org": "Associated Press",
+        "efe.com": "EFE",
+        "efe.com": "EFE",
+    }
+
+    for domain, agency in domain_map.items():
+        if domain in url:
+            return agency, True
+
+    marker_map = (
+        ("by reuters", "Reuters"),
+        ("reuters /", "Reuters"),
+        ("reuters/", "Reuters"),
+        ("© reuters", "Reuters"),
+        ("reuters news agency", "Reuters"),
+        ("reuters news", "Reuters"),
+        ("agence reuters", "Reuters"),
+        ("selon reuters", "Reuters"),
+        ("d après reuters", "Reuters"),
+        ("d'apres reuters", "Reuters"),
+        ("agence france-presse", "AFP"),
+        ("by afp", "AFP"),
+        ("associated press", "Associated Press"),
+        ("ap news", "Associated Press"),
+        ("by the associated press", "Associated Press"),
+        ("agencia efe", "EFE"),
+        ("by efe", "EFE"),
+    )
+
+    for marker, agency in marker_map:
+        if marker in context:
+            return agency, False
+
+    return "", False
+
+
+def is_agency_syndicated(event):
+    agency, direct = detect_agency(event)
+    event["agency"] = agency
+    event["agency_direct"] = direct
+    return bool(agency) and not direct
+
+
 def get_page_context(url):
     if not url or not str(url).startswith(("http://", "https://")):
         return ""
@@ -696,6 +778,18 @@ def build_clusters(signals):
         event["context"] = get_page_context(
             event.get("link", "")
         )
+        event["agency_syndicated"] = is_agency_syndicated(event)
+        if event.get("agency"):
+            kind = "direct" if event.get("agency_direct") else "reprise"
+            print(
+                f"GDELT agence détectée: {event['agency']} ({kind}) |",
+                event.get("link", "")
+            )
+
+    # Les agences fiables sont AUTORISÉES comme sources.
+    # Une reprise d'une agence reste toutefois rattachée à cette agence
+    # et ne compte pas comme une source indépendante supplémentaire.
+    gdelt_valid = gdelt_sorted[:60]
 
     # Telegram reste intégralement conservé comme signal social.
     telegram_signals = [
@@ -703,7 +797,7 @@ def build_clusters(signals):
         if x["kind"] == "telegram"
     ]
 
-    all_signals = gdelt_sorted[:60] + telegram_signals
+    all_signals = gdelt_valid + telegram_signals
 
     for signal in all_signals:
         placed = False
@@ -769,14 +863,35 @@ def select_flash_clusters(clusters):
             if x["kind"] == "telegram"
         ]
 
-        gdelt_sources = max(
-            [
-                x.get("sources", 0)
-                for x in signals
-                if x["kind"] == "gdelt"
-            ],
-            default=0
-        )
+        valid_gdelt = [
+            x for x in signals
+            if x["kind"] == "gdelt"
+            and not x.get("agency_syndicated", False)
+        ]
+
+        # Identité canonique des sources : une reprise de Reuters sur un
+        # site tiers reste Reuters et ne crée pas une seconde confirmation.
+        canonical_sources = set()
+        independent_domains = set()
+        direct_agencies = set()
+
+        for x in valid_gdelt:
+            agency = x.get("agency") or ""
+            if agency:
+                canonical_sources.add(f"agency:{agency}")
+                if x.get("agency_direct"):
+                    direct_agencies.add(agency)
+            else:
+                link = str(x.get("link") or "").strip()
+                m = re.match(r"https?://([^/]+)", link.lower())
+                if m:
+                    domain = m.group(1).split(":")[0].removeprefix("www.")
+                    independent_domains.add(domain)
+                    canonical_sources.add(f"domain:{domain}")
+
+        # Une reprise d'agence ne compte donc jamais comme un domaine
+        # indépendant supplémentaire.
+        gdelt_sources = len(canonical_sources)
 
         gdelt_mentions = max(
             [
@@ -830,8 +945,8 @@ def select_flash_clusters(clusters):
         # Un cluster composé uniquement d'une ligne GDELT ne suffit jamais.
         gdelt_valid_links = {
             str(x.get("link") or "").strip()
-            for x in signals
-            if x.get("kind") == "gdelt" and str(x.get("link") or "").startswith(("http://", "https://"))
+            for x in valid_gdelt
+            if str(x.get("link") or "").startswith(("http://", "https://"))
         }
         if not telegram_events and len(gdelt_valid_links) < 2 and gdelt_sources < 2:
             print("  -> REJET: pas de sources indépendantes suffisantes")
@@ -900,6 +1015,8 @@ REFUSE (REPONSE: NON) si c'est :
 - un petit contrat, partenariat, protocole ou accord universitaire/commercial ;
 - une analyse, opinion, commentaire ou résumé d'actualité ;
 - une information provenant d'une seule source ou d'une seule occurrence ;
+- une dépêche d'agence seule si elle ne décrit pas un événement réellement important ou émergent ;
+- plusieurs sites qui reprennent exactement la même dépêche d'agence : cela ne constitue pas plusieurs confirmations indépendantes ;
 - un élément ambigu, mal compris ou insuffisamment documenté ;
 - quelque chose dont l'importance mondiale ou nationale est faible.
 
@@ -907,6 +1024,9 @@ ACCEPTE seulement si les sources montrent le même événement nouveau et signif
 avec une propagation réelle ou un impact potentiellement important maintenant.
 
 Important : plusieurs lignes provenant du même article ne comptent que comme UNE source.
+Une agence fiable (Reuters, AFP, Associated Press, EFE, etc.) compte comme UNE source canonique.
+Un site qui republie une dépêche d'agence est rattaché à cette agence et ne compte PAS comme une source indépendante supplémentaire.
+Une dépêche d'agence directe peut néanmoins être la source principale d'un FLASH si l'événement est réellement important ou émergent.
 
 Si REFUS : réponds exactement :
 NON
@@ -1037,7 +1157,9 @@ def send_flash(cluster):
         (
             x for x in cluster["signals"]
             if x["kind"] == "gdelt"
+            and not x.get("agency_syndicated", False)
             and x.get("link")
+            and (x.get("agency_direct") or not x.get("agency"))
         ),
         None
     )
@@ -1046,7 +1168,7 @@ def send_flash(cluster):
         primary = next(
             (
                 x for x in cluster["signals"]
-                if x.get("link")
+                if x.get("link") and not x.get("agency_syndicated", False)
             ),
             None
         )
@@ -1065,11 +1187,23 @@ def send_flash(cluster):
         or [""]
     )
 
-    sources = sorted({
-        x.get("source", "")
-        for x in cluster["signals"]
-        if x.get("source")
-    })
+    source_labels = set()
+    for x in cluster["signals"]:
+        if x.get("agency"):
+            # Une agence est une source canonique. Une reprise ne crée pas
+            # une nouvelle source et n'est donc pas affichée séparément.
+            if x.get("agency_direct"):
+                source_labels.add(x.get("agency"))
+        elif x.get("kind") == "telegram":
+            if x.get("source"):
+                source_labels.add(x.get("source"))
+        elif x.get("kind") == "gdelt" and not x.get("agency_syndicated", False):
+            link = str(x.get("link") or "")
+            m = re.match(r"https?://([^/]+)", link.lower())
+            if m:
+                source_labels.add(m.group(1).split(":")[0].removeprefix("www."))
+
+    sources = sorted(source_labels)
 
     text = (
         f"🔴 <b>FLASH — {title.upper()}</b>\n\n"
