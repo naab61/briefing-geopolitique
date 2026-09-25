@@ -1243,5 +1243,18 @@
     "sources": [
       "centralwesterndaily.com.au"
     ]
+  },
+  {
+    "fingerprint": "government|against|aggressive|allows|campaign|court|database|eligibility|federal|government|grants|noncitizen|revamped|supreme|temporary|trump|voter|voting",
+    "identity": "GOVERNMENT   3 Supreme Court allows revamped federal voter eligibility database for now — It grants Trump a temporary win in his aggressive campaign against noncitizen voting.",
+    "actors": "GOVERNMENT",
+    "country": "États-Unis",
+    "title": "États-Unis : La Cour suprême valide un registre électoral fédéral",
+    "summary": "La Cour suprême autorise provisoirement l'utilisation d'une base de données fédérale controversée sur l'éligibilité des électeurs, offrant une victoire temporaire à l'administration Trump.",
+    "date": "2026-09-25T16:30:00+00:00",
+    "score": 31,
+    "sources": [
+      "reporterherald.com"
+    ]
   }
 ]
