@@ -383,5 +383,45 @@
     "sources": [
       "GDELT Events"
     ]
+  },
+  {
+    "fingerprint": "parliament",
+    "date": "2026-09-25T08:15:00+00:00",
+    "score": 19,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "business|coca|cola|company|london",
+    "date": "2026-09-25T08:15:00+00:00",
+    "score": 19,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "nasa",
+    "date": "2026-09-25T08:15:00+00:00",
+    "score": 19,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "chinese|jinping",
+    "date": "2026-09-25T08:15:00+00:00",
+    "score": 19,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "1500043|1504100|american|company",
+    "date": "2026-09-25T08:15:00+00:00",
+    "score": 19,
+    "sources": [
+      "GDELT Events"
+    ]
   }
 ]
