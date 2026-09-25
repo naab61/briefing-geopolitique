@@ -1451,5 +1451,18 @@
     "sources": [
       "arabnews.com"
     ]
+  },
+  {
+    "fingerprint": "citizen|court|high|missouri|secretary|state|states|united|backed|blocks|citizen|congressional|control|court|defeat|different|edge|elections|face|give|high|house|means|midterm|missouri|news|party|primary|republicans|ruling",
+    "identity": "MISSOURI CITIZEN MO 2 Supreme Court blocks Trump-backed Missouri congressional map | WJCT News 89.9 — The ruling is a defeat for Republicans seeking to give their party an edge in the midterm elections for control of the House. It means voters will face a different map than the one used in the primary elections. HIGH COURT SECRETARY OF STATE MO 2 Supreme Court blocks Trump-backed Missouri congressional map | WJCT News 89.9 — The ruling is a defeat for Republicans seeking to give their party an edge in the midterm elections for control of the House. It means voters will face a different map than the one used in the primary elections. HIGH COURT UNITED STATES MO 2 Supreme Court blocks Trump-backed Missouri congressional map | WJCT News 89.9 — The ruling is a defeat for Republicans seeking to give their party an edge in the midterm elections for control of the House. It means voters will face a different map than the one used in the primary elections.",
+    "actors": "MISSOURI CITIZEN HIGH COURT SECRETARY OF STATE HIGH COURT UNITED STATES",
+    "country": "Missouri, États-Unis",
+    "title": "États-Unis : La Cour suprême bloque le redécoupage électoral du Missouri",
+    "summary": "La Cour suprême américaine a bloqué la carte des circonscriptions du Missouri soutenue par Donald Trump, infligeant un revers aux républicains en vue des élections de mi-mandat. Cette décision majeure oblige les électeurs à utiliser un nouveau tracé pour le scrutin.",
+    "date": "2026-09-25T22:30:00+00:00",
+    "score": 35,
+    "sources": [
+      "news.wjct.org"
+    ]
   }
 ]
