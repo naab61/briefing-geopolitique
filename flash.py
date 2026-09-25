@@ -553,7 +553,7 @@ def get_page_context(url):
         return ""
 
     try:
-        raw = http_get(url, timeout=12).decode(
+        raw = http_get(url, timeout=6).decode(
             "utf-8",
             errors="replace"
         )
@@ -777,7 +777,7 @@ def build_clusters(signals):
 
     # Les 60 événements GDELT les plus propagés sont les seuls
     # à recevoir une récupération de titre/contexte.
-    for event in gdelt_sorted[:60]:
+    for event in gdelt_sorted[:15]:
         event["context"] = get_page_context(
             event.get("link", "")
         )
@@ -1087,8 +1087,18 @@ Ne rajoute aucun autre texte.
          "v1beta/models/gemini-3.5-flash-lite:generateContent?key="+GEMINI_API_KEY)
     request=urllib.request.Request(url,data=json.dumps(payload).encode("utf-8"),headers={"Content-Type":"application/json"},method="POST")
     try:
-        with urllib.request.urlopen(request,timeout=30) as response:
-            result=json.loads(response.read().decode("utf-8"))
+        try:
+            with urllib.request.urlopen(request, timeout=60) as response:
+                result=json.loads(response.read().decode("utf-8"))
+        except Exception as first_exc:
+            # Deuxième tentative avec un prompt plus court : les clusters très riches
+            # peuvent dépasser le temps de lecture du premier appel.
+            compact = source_text[:6500]
+            retry_prompt = prompt.replace(source_text, compact)
+            retry_payload={"contents":[{"parts":[{"text":retry_prompt}]}],"generationConfig":{"temperature":0.0,"maxOutputTokens":180}}
+            retry_request=urllib.request.Request(url,data=json.dumps(retry_payload).encode("utf-8"),headers={"Content-Type":"application/json"},method="POST")
+            with urllib.request.urlopen(retry_request, timeout=60) as response:
+                result=json.loads(response.read().decode("utf-8"))
         text=result["candidates"][0]["content"]["parts"][0]["text"].strip()
         if re.search(r"(?im)^NON\s*$", text):
             return None
