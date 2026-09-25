@@ -1438,5 +1438,18 @@
     "sources": [
       "examiner.com.au"
     ]
+  },
+  {
+    "fingerprint": "arabia|saudi|turkiye|3093009|arabia|saudi|turkiye",
+    "identity": "TURKIYE SAUDI ARABIA -3093009 4 ",
+    "actors": "TURKIYE SAUDI ARABIA",
+    "country": "Arabie saoudite",
+    "title": "Coopération militaire renforcée entre l'Arabie saoudite, le Pakistan et la Turkiye",
+    "summary": "L'Arabie saoudite, le Pakistan et la Turkiye conviennent d'intensifier leur coopération militaire pour faire face à l'intensification des attaques des rebelles houthis, marquant un tournant sécuritaire régional important.",
+    "date": "2026-09-25T21:45:00+00:00",
+    "score": 25,
+    "sources": [
+      "arabnews.com"
+    ]
   }
 ]
