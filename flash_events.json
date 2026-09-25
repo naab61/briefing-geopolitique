@@ -1143,5 +1143,29 @@
     "sources": [
       "GDELT Events"
     ]
+  },
+  {
+    "fingerprint": "1044367|1898541|2552151|2960561|531871|china|egypt|european|house|journalist|representatives|residents|russia|spokesman|states|switzerland|turkey|ukraine",
+    "date": "2026-09-25T13:00:00+00:00",
+    "score": 31,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "2637882|china|taiwan",
+    "date": "2026-09-25T13:00:00+00:00",
+    "score": 25,
+    "sources": [
+      "GDELT Events"
+    ]
+  },
+  {
+    "fingerprint": "11065838|531871|china|chinese|first|lady|president|washington",
+    "date": "2026-09-25T13:00:00+00:00",
+    "score": 25,
+    "sources": [
+      "GDELT Events"
+    ]
   }
 ]
