@@ -1738,5 +1738,20 @@
     "sources": [
       "el-balad.com"
     ]
+  },
+  {
+    "fingerprint": "1898541|china|chinese|mongolia|mongolian|tibetan|uyghur|washington",
+    "date": "2026-09-26T15:45:00+00:00",
+    "detected_at": "2026-09-26T15:46:13.937995+00:00",
+    "sent_at": "2026-09-26T15:46:14.496589+00:00",
+    "source_signal_at": "2026-09-26T15:45:00+00:00",
+    "semantic_text": "WASHINGTON CHINESE -1898541 4 Thousands rally in Washington over human rights abuses in China — Washington, Sep 26 (IANS) Thousands of Tibetan protesters marched through Washington protesting against Chinese President Xi Jinping&#039;s recent visit to the US, carrying Tibetan flags and placards with slogans that read, “Xi Jinping is guilty of genocide” and “Tibet was never a part of China,” a report has stated. MONGOLIAN UYGHUR MG 1 Thousands rally in Washington over human rights abuses in China — Washington, Sep 26 (IANS) Thousands of Tibetan protesters marched through Washington protesting against Chinese President Xi Jinping&#039;s recent visit to the US, carrying Tibetan flags and placards with slogans that read, “Xi Jinping is guilty of genocide” and “Tibet was never a part of China,” a report has stated. CHINA TIBETAN -1898541 4 Thousands rally in Washington over human rights abuses in China — Washington, Sep 26 (IANS) Thousands of Tibetan protesters marched through Washington protesting against Chinese President Xi Jinping&#039;s recent visit to the US, carrying Tibetan flags and placards with slogans that read, “Xi Jinping is guilty of genocide” and “Tibet was never a part of China,” a report has stated. WASHINGTON CHINESE -1898541 4 Thousands rally in Washington over human rights abuses in China — Thousands of Tibetan protesters marched through Washington protesting against Chinese President Xi Jinping's recent visit to the US, carrying Tib.... CHINA CHINA -1898541 4 Thousands rally in Washington over human rights abuses in China — Washington, Sep 26 (IANS) Thousands of Tibetan protesters marched through Washington protesting against Chinese President Xi Jinping&#039;s recent visit to the US, carrying Tibetan flags and placards with slogans that read, “Xi Jinping is guilty of genocide” and “Tibet was never a part of China,” a report has stated. CHINESE UYGHUR MG 1 Thousands rally in Washington over human rights abuses in China — Washington, Sep 26 (IANS) Thousands of Tibetan protesters marched through Washington protesting against Chinese President Xi Jinping&#039;s recent visit to the US, carrying Tibetan flags and placards with slogans that read, “Xi Jinping is guilty of genocide” and “Tibet was never a part of China,” a report has stated. CHINA UYGHUR MG 4 Thousands rally in Washington over human rights abuses in China — Washington, Sep 26 (IANS) Thousands of Tibetan protesters marched through Washington protesting against Chinese President Xi Jinping&#039;s recent visit to the US, carrying Tibetan flags and placards with slogans that read, “Xi Jinping is guilty of genocide” and “Tibet was never a part of China,” a report has stated. MONGOLIA UYGHUR MG 4",
+    "title": "Manifestation de Tibétains à Washington contre Xi Jinping",
+    "summary": "Des milliers de manifestants tibétains ont défilé à Washington pour protester contre la politique de la Chine et la visite du président Xi Jinping.",
+    "score": 25,
+    "sources": [
+      "ianslive.in",
+      "prokerala.com"
+    ]
   }
 ]
