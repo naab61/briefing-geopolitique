@@ -16,13 +16,17 @@ jobs:
           X_BEARER_TOKEN: ${{ secrets.X_BEARER_TOKEN }}
         run: |
           python - <<'PY'
-          import os, re
+          import os
           t = os.environ.get("X_BEARER_TOKEN", "")
-          print("X token présent :", bool(t))
+
           print("Longueur :", len(t))
-          print("Espaces/caractères invisibles :", any(c.isspace() for c in t))
-          print("Format caractères :", bool(re.fullmatch(r"[A-Za-z0-9%._~+/=-]+", t)))
-          print("Préfixe Bearer attendu :", t.startswith("AAAA"))
+
+          for i, c in enumerate(t):
+              if c.isspace() or not (c.isascii() and c.isprintable()):
+                  print("Caractère suspect à la position :", i)
+                  print("Type :", repr(c))
+                  print("Code Unicode :", ord(c))
+                  print("Nom Unicode :", __import__("unicodedata").name(c, "INCONNU"))
           PY
 
       - name: Exécuter FLASH
