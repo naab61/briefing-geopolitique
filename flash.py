@@ -12,15 +12,17 @@ from datetime import datetime, timezone, timedelta
 from zoneinfo import ZoneInfo
 
 # ============================================================
-# FLASH RADAR — VERSION "TREND V8 — PROPAGATION GDELT CORRIGEE"
+# FLASH RADAR — VERSION "TREND V12 — RADAR SOCIAL ÉMERGENT"
 # ============================================================
 # Principe:
 #   - aucune liste de mots-clés pour décider qu'un FLASH existe
 #   - détection d'événements émergents par propagation
 #   - GDELT Events = signal mondial large
 #   - Telegram public = signal social / OSINT
+#   - X + Reddit = capteurs de tendances émergentes
+#   - aucune liste de thèmes : le moteur découvre les sujets
 #   - un même événement = un seul FLASH
-#   - Gemini ne fait que traduire + condenser
+#   - Gemini interprète et condense les signaux retenus
 #
 # Limite assumée:
 # GitHub Actions + scraping public ne garantit pas 1-5 min.
@@ -45,7 +47,11 @@ TREND_MEMORY_HOURS = 24
 TREND_EVENT_FILE = "flash_trends.json"
 X_BEARER_TOKEN = os.environ.get("X_BEARER_TOKEN", "").strip()
 X_QUERIES = [q.strip() for q in os.environ.get("X_QUERIES", "-is:retweet").split("||") if q.strip()]
-REDDIT_SUBREDDITS = [q.strip() for q in os.environ.get("REDDIT_SUBREDDITS", "all").split(",") if q.strip()]
+REDDIT_SUBREDDITS = [
+    q.strip()
+    for q in os.environ.get("REDDIT_SUBREDDITS", "all").split(",")
+    if q.strip()
+]
 PARIS_TZ = ZoneInfo("Europe/Paris")
 
 TELEGRAM_CHANNELS = [
@@ -942,7 +948,6 @@ def detect_agency(event):
         "afp.com": "AFP",
         "apnews.com": "Associated Press",
         "ap.org": "Associated Press",
-        "efe.com": "EFE",
         "efe.com": "EFE",
     }
 
@@ -1847,7 +1852,9 @@ def send_flash(cluster):
 # ============================================================
 
 def main():
-    print("=== FLASH TREND RADAR ===")
+    print("=== FLASH TREND RADAR V12 ===")
+    print("X: capteur", "ACTIF" if X_BEARER_TOKEN else "INACTIF")
+    print("Reddit: capteur ACTIF | subreddits:", ", ".join(REDDIT_SUBREDDITS[:10]))
 
     telegram_posts = get_telegram_posts()
 
