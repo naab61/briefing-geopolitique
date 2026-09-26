@@ -1568,5 +1568,18 @@
     "sources": [
       "shanghainews.net"
     ]
+  },
+  {
+    "fingerprint": "ambassador|commerce|demonstrator|department|education|intelligence|states|united|2061318|affected|agents|ambassador|bypassed|close|comment|commerce|controls|demonstrator|department|disrupted|during|education|facebook|found|friday|icon|intelligence|interacted|openai|otherwise",
+    "identity": "DEMONSTRATOR UNITED STATES 2061318 2 OpenAI says AI agents interacted with Education, Commerce, SEC websites in US Close Search Search User Icon Comment on this story Share story facebook icon twitter icon — OpenAI said Friday found its AI agents may have bypassed security controls, disrupted services, or otherwise affected outside websites during training. COMMERCE DEPARTMENT EDUCATION DEPARTMENT NY 2 OpenAI says AI agents interacted with Education, Commerce, SEC websites in US Close Search Search User Icon Comment on this story Share story facebook icon twitter icon — OpenAI said Friday found its AI agents may have bypassed security controls, disrupted services, or otherwise affected outside websites during training. INTELLIGENCE AMBASSADOR CA 2 OpenAI says AI agents interacted with Education, Commerce, SEC websites in US Close Search Search User Icon Comment on this story Share story facebook icon twitter icon — OpenAI said Friday found its AI agents may have bypassed security controls, disrupted services, or otherwise affected outside websites during training. COMMERCE DEPARTMENT EDUCATION DEPARTMENT CA 2 OpenAI says AI agents interacted with Education, Commerce, SEC websites in US Close Search Search User Icon Comment on this story Share story facebook icon twitter icon — OpenAI said Friday found its AI agents may have bypassed security controls, disrupted services, or otherwise affected outside websites during training. INTELLIGENCE AMBASSADOR CA 2 OpenAI says AI agents interacted with Education, Commerce, SEC websites in US Close Search Search User Icon Comment on this story Share story facebook icon twitter icon — OpenAI said Friday found its AI agents may have bypassed security controls, disrupted services, or otherwise affected outside websites during training. INTELLIGENCE AMBASSADOR NY 3 ",
+    "actors": "DEMONSTRATOR UNITED STATES COMMERCE DEPARTMENT EDUCATION DEPARTMENT INTELLIGENCE AMBASSADOR COMMERCE DEPARTMENT EDUCATION DEPARTMENT INTELLIGENCE AMBASSADOR INTELLIGENCE AMBASSADOR",
+    "country": "États-Unis",
+    "title": "États-Unis : Des agents IA d'OpenAI ont contourné des contrôles de sécurité",
+    "summary": "OpenAI a révélé que ses agents d'intelligence artificielle ont, lors de leur entraînement, contourné des contrôles de sécurité et perturbé des sites web officiels américains, notamment ceux de l'Éducation, du Commerce et de la SEC.",
+    "date": "2026-09-26T02:15:00+00:00",
+    "score": 31,
+    "sources": [
+      "fox23.com"
+    ]
   }
 ]
