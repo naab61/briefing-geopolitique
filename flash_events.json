@@ -1659,5 +1659,18 @@
     "sources": [
       "warringtonguardian.co.uk"
     ]
+  },
+  {
+    "fingerprint": "catholic|christian|france|french|1456928|capital|catholic|catholics|central|christian|down|encourages|expected|france|french|hundreds|journal|mass|paris|people|persevere|pope|preach|salisbury|shuts|thousands",
+    "identity": "FRANCE CHRISTIAN -1456928 4 Pope encourages Catholics to persevere as central Paris shuts down for Mass | Salisbury Journal — Leo XIV is expected to preach to hundreds of thousands of people in the French capital. FRANCE CATHOLIC -1456928 4 Pope encourages Catholics to persevere as central Paris shuts down for Mass | Salisbury Journal — Leo XIV is expected to preach to hundreds of thousands of people in the French capital.  FRENCH -1456928 4 Pope encourages Catholics to persevere as central Paris shuts down for Mass | Salisbury Journal — Leo XIV is expected to preach to hundreds of thousands of people in the French capital.",
+    "actors": "FRANCE CHRISTIAN FRANCE CATHOLIC FRENCH",
+    "country": "France",
+    "title": "Pape Léon XIV à Paris pour une messe géante",
+    "summary": "Le pape Léon XIV est attendu pour prêcher devant des centaines de milliers de personnes à Paris, entraînant la fermeture du centre de la capitale pour une messe historique.",
+    "date": "2026-09-26T12:00:00+00:00",
+    "score": 35,
+    "sources": [
+      "salisburyjournal.co.uk"
+    ]
   }
 ]
