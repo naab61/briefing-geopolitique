@@ -1753,5 +1753,19 @@
       "ianslive.in",
       "prokerala.com"
     ]
+  },
+  {
+    "fingerprint": "814876|american|states|united",
+    "date": "2026-09-26T16:30:00+00:00",
+    "detected_at": "2026-09-26T16:30:56.766870+00:00",
+    "sent_at": "2026-09-26T16:30:57.196573+00:00",
+    "source_signal_at": "2026-09-26T16:30:00+00:00",
+    "semantic_text": "AMERICAN UNITED STATES -814876 1 Briton and wife killed in Athens building collapse – reports | Richmond and Twickenham Times — Emergency crews recovered six bodies following an explosion near the Acropolis, Greek broadcaster EPT said. ",
+    "title": "Effondrement d'un immeuble à Athènes",
+    "summary": "Six corps ont été retrouvés par les secours à la suite d'une explosion près de l'Acropole, causant notamment la mort d'un Britannique et de son épouse. Cet accident majeur justifie une alerte immédiate en raison de son lourd bilan humain.",
+    "score": 17,
+    "sources": [
+      "richmondandtwickenhamtimes.co.uk"
+    ]
   }
 ]
