@@ -1542,5 +1542,31 @@
     "sources": [
       "keyt.com"
     ]
+  },
+  {
+    "fingerprint": "detective|police|states|united|believe|black|chicago|court|details|detective|fortune|found|hanging|jackson|mississippi|police|staged|states|tasia|tree|united|woman|year",
+    "identity": "POLICE   2 Police believe Tasia Fortune’s hanging was staged, new court details – NBC Chicago — Fortune, a 29-year-old Black woman, was found hanging from a tree in Jackson, Mississippi, on Aug. 3. DETECTIVE   2 Police believe Tasia Fortune’s hanging was staged, new court details – NBC Chicago — Fortune, a 29-year-old Black woman, was found hanging from a tree in Jackson, Mississippi, on Aug. 3. DETECTIVE   2 Police believe Tasia Fortune’s hanging was staged, new court details – NBC Chicago — Fortune, a 29-year-old Black woman, was found hanging from a tree in Jackson, Mississippi, on Aug. 3. UNITED STATES   2 Police believe Tasia Fortune’s hanging was staged, new court details – NBC Chicago — Fortune, a 29-year-old Black woman, was found hanging from a tree in Jackson, Mississippi, on Aug. 3. UNITED STATES   2  UNITED STATES POLICE MS 2 ",
+    "actors": "POLICE DETECTIVE DETECTIVE UNITED STATES UNITED STATES UNITED STATES POLICE",
+    "country": "États-Unis",
+    "title": "États-Unis : La pendaison de Tasia Fortune jugée simulée",
+    "summary": "De nouveaux éléments judiciaires indiquent que la police de Jackson, dans le Mississippi, estime que la mort par pendaison de Tasia Fortune, une femme noire de 29 ans retrouvée en août, a été mise en scène.",
+    "date": "2026-09-26T01:30:00+00:00",
+    "score": 25,
+    "sources": [
+      "nbcchicago.com"
+    ]
+  },
+  {
+    "fingerprint": "intelligence|lawmaker|newspaper|official|president|riyadh|saudi|secretary|senator|state|3093009|arabia|article|assessment|civilian|classified|concerns|deal|developing|donald|fueled|full|intelligence|lawmaker|newspaper|nuclear|official|president|read|riyadh",
+    "identity": "LAWMAKER   4 Saudi Arabia has not ruled out developing nuclear weapons  WaPo — A classified US intelligence assessment has fueled concerns over President Donald Trump’s civilian nuclear deal with Riyadh Read Full Article LAWMAKER   4 Saudi Arabia has not ruled out developing nuclear weapons  WaPo — A classified US intelligence assessment has fueled concerns over President Donald Trump’s civilian nuclear deal with Riyadh Read Full Article INTELLIGENCE PRESIDENT -3093009 4 Saudi Arabia has not ruled out developing nuclear weapons  WaPo — A classified US intelligence assessment has fueled concerns over President Donald Trump’s civilian nuclear deal with Riyadh Read Full Article INTELLIGENCE PRESIDENT -3093009 4 Saudi Arabia has not ruled out developing nuclear weapons  WaPo — A classified US intelligence assessment has fueled concerns over President Donald Trump’s civilian nuclear deal with Riyadh Read Full Article SECRETARY OF STATE RIYADH -3093009 4 Saudi Arabia has not ruled out developing nuclear weapons  WaPo — A classified US intelligence assessment has fueled concerns over President Donald Trump’s civilian nuclear deal with Riyadh Read Full Article INTELLIGENCE SAUDI -3093009 4 Saudi Arabia has not ruled out developing nuclear weapons  WaPo — A classified US intelligence assessment has fueled concerns over President Donald Trump’s civilian nuclear deal with Riyadh Read Full Article US OFFICIAL NEWSPAPER -3093009 4 Saudi Arabia has not ruled out developing nuclear weapons  WaPo — A classified US intelligence assessment has fueled concerns over President Donald Trump’s civilian nuclear deal with Riyadh Read Full Article INTELLIGENCE SAUDI -3093009 4  SENATOR RIYADH -3093009 4 ",
+    "actors": "LAWMAKER LAWMAKER INTELLIGENCE PRESIDENT INTELLIGENCE PRESIDENT SECRETARY OF STATE RIYADH INTELLIGENCE SAUDI US OFFICIAL NEWSPAPER INTELLIGENCE SAUDI SENATOR RIYADH",
+    "country": "Arabie saoudite",
+    "title": "Arabie saoudite et ambition nucléaire selon un rapport",
+    "summary": "Une note de renseignement américaine classée secret défense révèle que l'Arabie saoudite n'exclut pas de développer l'arme nucléaire, alimentant les inquiétudes autour d'un accord civil avec Washington.",
+    "date": "2026-09-26T01:30:00+00:00",
+    "score": 25,
+    "sources": [
+      "shanghainews.net"
+    ]
   }
 ]
