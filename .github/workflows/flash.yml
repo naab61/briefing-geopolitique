@@ -17,20 +17,26 @@ jobs:
         run: |
           python - <<'PY'
           import os
-          t = os.environ.get("X_BEARER_TOKEN", "")
+          import urllib.request
+          import urllib.error
 
-          print("Longueur :", len(t))
+          token = "".join(os.environ.get("X_BEARER_TOKEN", "").split())
 
-          propre = "".join(c for c in t if not c.isspace())
+          request = urllib.request.Request(
+              "https://api.x.com/2/users/me",
+              headers={
+                  "Authorization": "Bearer " + token,
+                  "User-Agent": "FlashTrendRadar/12.0"
+              }
+          )
 
-          print("Longueur après suppression des espaces :", len(propre))
-
-          for i, c in enumerate(propre):
-              if not (c.isascii() and c.isprintable()):
-                  print("Caractère invalide après nettoyage à la position :", i)
-                  print("Type :", repr(c))
-                  print("Code Unicode :", ord(c))
-                  print("Nom Unicode :", __import__("unicodedata").name(c, "INCONNU"))
+          try:
+              with urllib.request.urlopen(request, timeout=30) as response:
+                  print("X TEST :", response.status)
+                  print("X authentification : OK")
+          except urllib.error.HTTPError as e:
+              print("X TEST :", e.code)
+              print("X authentification : REFUSÉE")
           PY
 
       - name: Exécuter FLASH
