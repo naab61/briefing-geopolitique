@@ -1724,5 +1724,19 @@
     "sources": [
       "wapt.com"
     ]
+  },
+  {
+    "fingerprint": "member|police|school|staff|student",
+    "date": "2026-09-26T15:00:00+00:00",
+    "detected_at": "2026-09-26T14:52:14.576473+00:00",
+    "sent_at": "2026-09-26T14:52:14.929045+00:00",
+    "source_signal_at": "2026-09-26T15:00:00+00:00",
+    "semantic_text": "STAFF MEMBER STUDENT 0 Hobbs police take juvenile into custody after Highland Middle School shooting - El-Balad.com — Hobbs police said a juvenile shot a Highland Middle School staff member outside the building, then was taken into custody after the attack. POLICE SCHOOL 0",
+    "title": "Fusillade dans un collège à Hobbs",
+    "summary": "Un membre du personnel d'un collège à Hobbs a été blessé par balle par un mineur à l'extérieur de l'établissement, avant que le suspect ne soit interpellé par la police.",
+    "score": 25,
+    "sources": [
+      "el-balad.com"
+    ]
   }
 ]
