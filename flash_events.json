@@ -1781,5 +1781,34 @@
     "sources": [
       "krcu.org"
     ]
+  },
+  {
+    "fingerprint": "2552151|2960561|2996338|european|german|germany|lavrov|manchester|nations|petersburg|russia|russian|sergey|switzerland|ukraine|ukrainian|union|united",
+    "date": "2026-09-26T17:45:00+00:00",
+    "detected_at": "2026-09-26T17:42:56.769385+00:00",
+    "sent_at": "2026-09-26T17:42:57.170599+00:00",
+    "source_signal_at": "2026-09-26T17:45:00+00:00",
+    "semantic_text": "UKRAINE 4 German, Russian foreign ministers have rare meeting at UN — The German and Russian foreign ministers have met on the sidelines of the U.N. General Assembly. GERMAN RUSSIAN -2552151 4 German, Russian foreign ministers have rare meeting at UN — The German and Russian foreign ministers have met on the sidelines of the U.N. General Assembly. SWITZERLAND MANCHESTER -2552151 4 German, Russian foreign ministers have rare meeting at UN — The German and Russian foreign ministers have met on the sidelines of the U.N. General Assembly. GERMAN RUSSIAN -2552151 4 German, Russian foreign ministers have rare meeting at UN — The German and Russian foreign ministers have met on the sidelines of the U.N. General Assembly. THE EUROPEAN UNION SERGEY LAVROV -2552151 4 German, Russian foreign ministers have rare meeting at UN — The German and Russian foreign ministers have met on the sidelines of the U.N. General Assembly. RUSSIA GERMANY GM 4 German, Russian foreign ministers have rare meeting at UN — The German and Russian foreign ministers have met on the sidelines of the U.N. General Assembly. UKRAINE 4 German, Russian foreign ministers have rare meeting at UN — The German and Russian foreign ministers have met on the sidelines of the U.N. General Assembly. UKRAINIAN RUSSIA -2960561 4",
+    "title": "Rencontre rare entre ministres allemand et russe à l'ONU",
+    "summary": "Les ministres des Affaires étrangères allemand et russe ont tenu une réunion bilatérale rare en marge de l'Assemblée générale des Nations unies, marquant un contact diplomatique inhabituel dans le contexte du conflit en Ukraine.",
+    "score": 31,
+    "sources": [
+      "aljazeera.com",
+      "news4jax.com"
+    ]
+  },
+  {
+    "fingerprint": "295004|assembly|borinquen|gaza|general|miami|nations|states|ukraine|united",
+    "date": "2026-09-26T17:45:00+00:00",
+    "detected_at": "2026-09-26T17:42:58.744138+00:00",
+    "sent_at": "2026-09-26T17:42:59.087590+00:00",
+    "source_signal_at": "2026-09-26T17:45:00+00:00",
+    "semantic_text": "UN GENERAL ASSEMBLY 2 US rejects UN pandemic preparedness declaration, blocking consensus adoption Close Search Search User Icon Comment on this story Share story facebook icon twitter icon — The United States rejected a proposed nonbinding UN declaration on pandemic preparedness Friday. UNITED NATIONS GAZA FL 2 US rejects UN pandemic preparedness declaration, blocking consensus adoption Close Search Search User Icon Comment on this story Share story facebook icon twitter icon — The United States rejected a proposed nonbinding UN declaration on pandemic preparedness Friday. UNITED NATIONS UKRAINE FL 2 US rejects UN pandemic preparedness declaration, blocking consensus adoption Close Search Search User Icon Comment on this story Share story facebook icon twitter icon — The United States rejected a proposed nonbinding UN declaration on pandemic preparedness Friday. MIAMI BORINQUEN 295004 3 US rejects UN pandemic preparedness declaration, blocking consensus adoption Close Search Search User Icon Comment on this story Share story facebook icon twitter icon — The United States rejected a proposed nonbinding UN declaration on pandemic preparedness Friday. UN GENERAL ASSEMBLY UNITED STATES NY 2 US rejects UN pandemic preparedness declaration, blocking consensus adoption Close Search Search User Icon Comment on this story Share story facebook icon twitter icon — The United States rejected a proposed nonbinding UN declaration on pandemic preparedness Friday. UN GENERAL ASSEMBLY UNITED STATES NY 2 US rejects UN pandemic preparedness declaration, blocking consensus adoption Close Search Search User Icon Comment on this story Share story facebook icon twitter icon — The United States rejected a proposed nonbinding UN declaration on pandemic preparedness Friday. MIAMI BORINQUEN 295004 2",
+    "title": "États-Unis / ONU : rejet de la déclaration sur les pandémies",
+    "summary": "Les États-Unis ont bloqué par leur opposition l'adoption par consensus d'une déclaration non contraignante de l'Assemblée générale de l'ONU sur la préparation aux pandémies. Ce blocage diplomatique majeur fragilise la réponse multilatérale aux crises sanitaires mondiales.",
+    "score": 31,
+    "sources": [
+      "upnorthlive.com"
+    ]
   }
 ]
