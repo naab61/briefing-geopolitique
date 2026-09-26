@@ -1620,5 +1620,18 @@
     "sources": [
       "breitbart.com"
     ]
+  },
+  {
+    "fingerprint": "beijing|chinese|1898541|affairs|agree|agreed|arrangement|beijing|billion|china|chinese|consensus|council|dialogue|during|earlier|economic|eight|endorsed|establishment|extension|foreign|including|jinping|kuala|launch|lumpur|ministry|outcomes|point",
+    "identity": "CHINESE BEIJING -1898541 4 China, US Agree to $30 Billion Tariff Cut, AI Dialogue — China and the US have agreed to a $30 billion reciprocal tariff-reduction arrangement and to launch dialogue on AI, under an eight-point consensus reached during Chinese President Xi Jinping's visit to the US, China's Ministry of Foreign Affairs said. The two sides recognized the work of their economic teams and endorsed steps including the establishment of a trade council, the tariff-reduction arrangement and an extension of outcomes from earlier talks in Kuala Lumpur, the ministry said.",
+    "actors": "CHINESE BEIJING",
+    "country": "États-Unis / Chine",
+    "title": "États-Unis et Chine : accord de réduction des tarifs douaniers",
+    "summary": "Washington et Pékin se sont mis d'accord sur une réduction réciproque de 30 milliards de dollars de leurs tarifs douaniers et sur le lancement d'un dialogue bilatéral concernant l'intelligence artificielle. Cet accord majeur, officialisé lors de la visite du président Xi Jinping, comprend également la création d'un conseil commercial conjoint.",
+    "date": "2026-09-26T11:00:00+00:00",
+    "score": 20,
+    "sources": [
+      "english.aawsat.com"
+    ]
   }
 ]
