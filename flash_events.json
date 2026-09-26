@@ -1581,5 +1581,18 @@
     "sources": [
       "fox23.com"
     ]
+  },
+  {
+    "fingerprint": "court|high|missouri|supreme|attempt|blocks|congressional|court|high|missouri|redistrict|redistricting|rejects|republican|seats|supreme|wsiu",
+    "identity": "HIGH COURT   2 Supreme Court blocks Republican redistricting attempt in Missouri | WSIU — The Supreme Court rejects a Republican attempt to redistrict the congressional seats in Missouri. MISSOURI SUPREME COURT MO 2 Supreme Court blocks Republican redistricting attempt in Missouri | WSIU — The Supreme Court rejects a Republican attempt to redistrict the congressional seats in Missouri. MISSOURI SUPREME COURT MO 2 Supreme Court blocks Republican redistricting attempt in Missouri | WSIU — The Supreme Court rejects a Republican attempt to redistrict the congressional seats in Missouri.",
+    "actors": "HIGH COURT MISSOURI SUPREME COURT MISSOURI SUPREME COURT",
+    "country": "Missouri, États-Unis",
+    "title": "États-Unis : La Cour suprême bloque le redécoupage électoral au Missouri",
+    "summary": "La Cour suprême fédérale a rejeté une tentative du parti républicain de redessiner les circonscriptions congressionnelles dans l'État du Missouri. Cette décision impacte directement l'équilibre politique local à l'approche des échéances électorales.",
+    "date": "2026-09-26T03:30:00+00:00",
+    "score": 25,
+    "sources": [
+      "wsiu.org"
+    ]
   }
 ]
