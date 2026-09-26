@@ -1633,5 +1633,18 @@
     "sources": [
       "english.aawsat.com"
     ]
+  },
+  {
+    "fingerprint": "kyiv|military|moscow|nations|russia|russian|ukraine|united|1044367|1055659|2960561|across|aerial|attacks|between|dead|exchange|four|intensifies|killed|kyiv|military|moscow|nations|officials|people|russia|russian|saturday|strikes",
+    "identity": "KYIV MOSCOW -1044367 4 7 dead as Russia, Ukraine exchange strikes and aerial war intensifies :: WRAL.com — KYIV, Ukraine (AP) — Russian attacks killed four people across Ukraine Saturday, officials said, as the aerial war between Moscow and Kyiv intensifies. RUSSIAN UKRAINE -1055659 4 7 dead as Russia, Ukraine exchange strikes and aerial war intensifies :: WRAL.com — KYIV, Ukraine (AP) — Russian attacks killed four people across Ukraine Saturday, officials said, as the aerial war between Moscow and Kyiv intensifies. MILITARY   4 7 dead as Russia, Ukraine exchange strikes and aerial war intensifies :: WRAL.com — KYIV, Ukraine (AP) — Russian attacks killed four people across Ukraine Saturday, officials said, as the aerial war between Moscow and Kyiv intensifies. UNITED NATIONS   4 7 dead as Russia, Ukraine exchange strikes and aerial war intensifies :: WRAL.com — KYIV, Ukraine (AP) — Russian attacks killed four people across Ukraine Saturday, officials said, as the aerial war between Moscow and Kyiv intensifies. UNITED NATIONS RUSSIA -2960561 4 7 dead as Russia, Ukraine exchange strikes and aerial war intensifies :: WRAL.com — KYIV, Ukraine (AP) — Russian attacks killed four people across Ukraine Saturday, officials said, as the aerial war between Moscow and Kyiv intensifies.",
+    "actors": "KYIV MOSCOW RUSSIAN UKRAINE MILITARY UNITED NATIONS UNITED NATIONS RUSSIA",
+    "country": "Ukraine",
+    "title": "Frappes croisées entre la Russie et l'Ukraine : 7 morts",
+    "summary": "Des attaques aériennes intensifiées entre Moscou et Kyiv ont fait au moins sept morts, marquant une recrudescence des hostilités.",
+    "date": "2026-09-26T11:15:00+00:00",
+    "score": 25,
+    "sources": [
+      "wral.com"
+    ]
   }
 ]
