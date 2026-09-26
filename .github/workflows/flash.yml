@@ -1,34 +1,20 @@
-name: Flash geopolitique
+name: FLASH TREND RADAR
 
 on:
-  schedule:
-    - cron: '*/5 * * * *'
-      timezone: 'Europe/Paris'
   workflow_dispatch:
-
-permissions:
-  contents: write
 
 jobs:
   flash:
     runs-on: ubuntu-latest
 
-    env:
-      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_FLASH_BOT_TOKEN }}
-      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_FLASH_CHAT_ID }}
-      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-
     steps:
-      - uses: actions/checkout@v4
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
 
-      - name: Run flash
+      - name: Exécuter FLASH
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          X_BEARER_TOKEN: ${{ secrets.X_BEARER_TOKEN }}
         run: python flash.py
-
-      - name: Save flash state
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add flash_seen.json
-          if [ -f flash_events.json ]; then git add flash_events.json; fi
-          git diff --cached --quiet || git commit -m "Update flash state"
-          git push
