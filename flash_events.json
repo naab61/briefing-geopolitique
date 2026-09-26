@@ -1767,5 +1767,19 @@
     "sources": [
       "richmondandtwickenhamtimes.co.uk"
     ]
+  },
+  {
+    "fingerprint": "states|united",
+    "date": "2026-09-26T17:15:00+00:00",
+    "detected_at": "2026-09-26T17:07:11.901849+00:00",
+    "sent_at": "2026-09-26T17:07:12.321316+00:00",
+    "source_signal_at": "2026-09-26T17:15:00+00:00",
+    "semantic_text": "UNITED STATES 3 Powerful nor'easter brings winds, floods to East Coast — Thousands of people are without power across the East Coast as a nor'easter rips through the area. Forecasters expect significant winds and rain throughout the weekend. UNITED STATES 3 Powerful nor'easter brings winds, floods to East Coast — Thousands of people are without power across the East Coast as a nor'easter rips through the area. Forecasters expect significant winds and rain throughout the weekend.",
+    "title": "Une puissante tempête frappe la côte Est des États-Unis",
+    "summary": "Une violente tempête de type nor'easter sévit sur la côte Est américaine, provoquant des vents violents, des inondations et des coupures de courant massives pour des milliers de foyers.",
+    "score": 26,
+    "sources": [
+      "krcu.org"
+    ]
   }
 ]
