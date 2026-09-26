@@ -11,6 +11,20 @@ jobs:
       - name: Récupérer le dépôt
         uses: actions/checkout@v4
 
+      - name: Vérification X
+        env:
+          X_BEARER_TOKEN: ${{ secrets.X_BEARER_TOKEN }}
+        run: |
+          python - <<'PY'
+          import os, re
+          t = os.environ.get("X_BEARER_TOKEN", "")
+          print("X token présent :", bool(t))
+          print("Longueur :", len(t))
+          print("Espaces/caractères invisibles :", any(c.isspace() for c in t))
+          print("Format caractères :", bool(re.fullmatch(r"[A-Za-z0-9%._~+/=-]+", t)))
+          print("Préfixe Bearer attendu :", t.startswith("AAAA"))
+          PY
+
       - name: Exécuter FLASH
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
