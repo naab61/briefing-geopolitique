@@ -1503,5 +1503,18 @@
     "sources": [
       "woai.iheart.com"
     ]
+  },
+  {
+    "fingerprint": "arizona|hawaii|mexico|states|united|6278245|abc7|another|arizona|catastrophic|floods|francisco|hawaii|high|hurricanes|island|life|mexico|pacific|people|potentially|preparing|states|storm|surf|threaten|threatening|united",
+    "identity": " ARIZONA AZ 2 Hurricanes in the Pacific threaten Hawaii and Mexico with floods and high surf - ABC7 San Francisco — People on Hawaii’s Big Island are preparing for another potentially life-threatening and catastrophic storm.  ARIZONA AZ 3 Hurricanes in the Pacific threaten Hawaii and Mexico with floods and high surf - ABC7 San Francisco — People on Hawaii’s Big Island are preparing for another potentially life-threatening and catastrophic storm. MEXICO   4 Hurricanes in the Pacific threaten Hawaii and Mexico with floods and high surf - ABC7 San Francisco — People on Hawaii’s Big Island are preparing for another potentially life-threatening and catastrophic storm. MEXICO UNITED STATES CA 2 Hurricanes in the Pacific threaten Hawaii and Mexico with floods and high surf - ABC7 San Francisco — People on Hawaii’s Big Island are preparing for another potentially life-threatening and catastrophic storm. UNITED STATES MEXICO 6278245 2 Hurricanes in the Pacific threaten Hawaii and Mexico with floods and high surf - ABC7 San Francisco — People on Hawaii’s Big Island are preparing for another potentially life-threatening and catastrophic storm.  MEXICO 6278245 2  MEXICO   2  MEXICO UNITED STATES 6278245 4  MEXICO HAWAII AZ 2  UNITED STATES MEXICO HI 4 ",
+    "actors": "ARIZONA ARIZONA MEXICO MEXICO UNITED STATES UNITED STATES MEXICO MEXICO MEXICO MEXICO UNITED STATES MEXICO HAWAII UNITED STATES MEXICO",
+    "country": "États-Unis / Mexique",
+    "title": "Menace d'ouragans majeurs à Hawaï et au Mexique",
+    "summary": "Des ouragans puissants menacent Hawaï et le Mexique avec des risques majeurs d'inondations et de vagues violentes, incitant les populations à se préparer à des tempêtes potentiellement catastrophiques.",
+    "date": "2026-09-26T00:15:00+00:00",
+    "score": 31,
+    "sources": [
+      "abc7news.com"
+    ]
   }
 ]
