@@ -40,6 +40,12 @@ MAX_TELEGRAM_AGE_MINUTES = 30
 MAX_EVENT_AGE_MINUTES = 180
 EVENT_MEMORY_HOURS = 24
 MAX_FLASHES_PER_RUN = 2
+MAX_TREND_FLASHES_PER_RUN = 2
+TREND_MEMORY_HOURS = 24
+TREND_EVENT_FILE = "flash_trends.json"
+X_BEARER_TOKEN = os.environ.get("X_BEARER_TOKEN", "").strip()
+X_QUERIES = [q.strip() for q in os.environ.get("X_QUERIES", "-is:retweet").split("||") if q.strip()]
+REDDIT_SUBREDDITS = [q.strip() for q in os.environ.get("REDDIT_SUBREDDITS", "all").split(",") if q.strip()]
 PARIS_TZ = ZoneInfo("Europe/Paris")
 
 TELEGRAM_CHANNELS = [
@@ -253,6 +259,436 @@ def get_telegram_posts():
             )
 
     return posts
+
+
+# ============================================================
+# RADAR SOCIAL — TENDANCES ÉMERGENTES, SANS LISTE DE THÈMES
+# ============================================================
+
+def get_x_signals():
+    """Collecte large de posts récents X.
+
+    Aucun thème n'est imposé. La requête par défaut est uniquement
+    structurelle (-is:retweet), afin de laisser le moteur découvrir les sujets.
+    Une ou plusieurs requêtes peuvent être fournies via X_QUERIES, séparées
+    par ||, sans que ces requêtes deviennent des critères éditoriaux.
+    """
+    if not X_BEARER_TOKEN:
+        print("X: désactivé (X_BEARER_TOKEN absent)")
+        return []
+
+    signals = []
+    endpoint = "https://api.x.com/2/tweets/search/recent"
+    fields = (
+        "created_at,author_id,public_metrics,lang,conversation_id,"
+        "attachments,entities"
+    )
+
+    for query in X_QUERIES[:5]:
+        params = urllib.parse.urlencode({
+            "query": query,
+            "max_results": "100",
+            "tweet.fields": fields,
+            "expansions": "author_id,attachments.media_keys",
+            "user.fields": "username,name,verified",
+            "media.fields": "type,url,preview_image_url,public_metrics",
+        })
+        url = endpoint + "?" + params
+        request = urllib.request.Request(
+            url,
+            headers={
+                "Authorization": "Bearer " + X_BEARER_TOKEN,
+                "User-Agent": "FlashTrendRadar/12.0",
+            },
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=30) as response:
+                payload = json.loads(response.read().decode("utf-8"))
+        except Exception as exc:
+            print("X erreur:", exc)
+            continue
+
+        users = {
+            u.get("id"): u
+            for u in payload.get("includes", {}).get("users", [])
+        }
+        media = {
+            m.get("media_key"): m
+            for m in payload.get("includes", {}).get("media", [])
+        }
+
+        for post in payload.get("data", []):
+            created = post.get("created_at", "")
+            dt = parse_iso_date(created)
+            age = age_minutes(dt)
+            if age is None or age < 0 or age > 30:
+                continue
+
+            metrics = post.get("public_metrics") or {}
+            author = users.get(post.get("author_id"), {})
+            media_items = []
+            for key in (post.get("attachments") or {}).get("media_keys", []):
+                if key in media:
+                    media_items.append(media[key])
+
+            engagement = (
+                metrics.get("like_count", 0)
+                + 3 * metrics.get("reply_count", 0)
+                + 4 * metrics.get("retweet_count", 0)
+                + 5 * metrics.get("quote_count", 0)
+            )
+
+            signals.append({
+                "kind": "x",
+                "source": "X",
+                "source_key": post.get("id", ""),
+                "text": post.get("text", ""),
+                "date": created,
+                "link": "https://x.com/i/web/status/" + str(post.get("id", "")),
+                "author": author.get("username", ""),
+                "author_name": author.get("name", ""),
+                "verified": bool(author.get("verified", False)),
+                "lang": post.get("lang", ""),
+                "metrics": metrics,
+                "engagement": engagement,
+                "media": media_items,
+                "age_minutes": age,
+            })
+
+    # Déduplication entre requêtes X.
+    unique = {}
+    for item in signals:
+        unique[item["source_key"]] = item
+    signals = list(unique.values())
+    print("X: %d signaux récents" % len(signals))
+    return signals
+
+
+def get_reddit_signals():
+    """Collecte publique de posts récents Reddit, sans sélection thématique."""
+    signals = []
+
+    for subreddit in REDDIT_SUBREDDITS[:10]:
+        endpoint = (
+            "https://www.reddit.com/r/" + urllib.parse.quote(subreddit) +
+            "/new.json?limit=100&raw_json=1"
+        )
+        try:
+            raw = http_get(endpoint, timeout=30).decode("utf-8", errors="replace")
+            payload = json.loads(raw)
+        except Exception as exc:
+            print("Reddit erreur %s:" % subreddit, exc)
+            continue
+
+        children = (payload.get("data") or {}).get("children") or []
+        for child in children:
+            post = child.get("data") or {}
+            created_ts = post.get("created_utc")
+            try:
+                dt = datetime.fromtimestamp(float(created_ts), tz=timezone.utc)
+            except Exception:
+                continue
+
+            age = age_minutes(dt)
+            if age is None or age < 0 or age > 60:
+                continue
+
+            score = max(0, int(post.get("score") or 0))
+            comments = max(0, int(post.get("num_comments") or 0))
+            engagement = score + 3 * comments
+            title = post.get("title", "")
+            body = post.get("selftext", "") or ""
+            text = (title + "\n" + body).strip()
+            if len(text) < 10:
+                text = title or body
+
+            signals.append({
+                "kind": "reddit",
+                "source": "Reddit",
+                "source_key": post.get("id", ""),
+                "text": text[:5000],
+                "date": dt.isoformat(),
+                "link": "https://www.reddit.com" + str(post.get("permalink", "")),
+                "subreddit": post.get("subreddit", subreddit),
+                "author": post.get("author", ""),
+                "metrics": {
+                    "score": score,
+                    "comment_count": comments,
+                },
+                "engagement": engagement,
+                "age_minutes": age,
+                "media": [],
+            })
+
+    unique = {}
+    for item in signals:
+        unique[item["source_key"]] = item
+    signals = list(unique.values())
+    print("Reddit: %d signaux récents" % len(signals))
+    return signals
+
+
+def trend_similarity(a, b):
+    # Le seuil reste volontairement modéré : les internautes peuvent
+    # parler du même phénomène avec des formulations complètement différentes.
+    sa = similarity(a.get("text", ""), b.get("text", ""))
+    if sa >= 0.30:
+        return sa
+
+    # Les URLs identiques sont un excellent signal de propagation.
+    ua = str(a.get("link", "")).split("?")[0].lower()
+    ub = str(b.get("link", "")).split("?")[0].lower()
+    if ua and ub and ua == ub:
+        return 1.0
+
+    return sa
+
+
+def trend_cluster_score(cluster):
+    signals = cluster["signals"]
+    platform_count = len(set(x.get("source") for x in signals))
+    total_engagement = sum(x.get("engagement", 0) for x in signals)
+    ages = [x.get("age_minutes") for x in signals if x.get("age_minutes") is not None]
+    youngest = min(ages) if ages else 60
+
+    # On mesure la dynamique, pas la présence d'un sujet particulier.
+    score = min(platform_count, 4) * 8
+    score += min(len(signals), 12) * 2
+    score += min(total_engagement / 20.0, 35)
+
+    if youngest <= 5:
+        score += 20
+    elif youngest <= 15:
+        score += 12
+    elif youngest <= 30:
+        score += 6
+
+    # Plusieurs auteurs / communautés indépendants augmentent la robustesse.
+    authors = {x.get("author") for x in signals if x.get("author")}
+    communities = {x.get("subreddit") for x in signals if x.get("subreddit")}
+    score += min(len(authors), 10) * 1.5
+    score += min(len(communities), 8) * 2
+
+    return round(score, 2)
+
+
+def build_trend_clusters(signals):
+    clusters = []
+
+    # Priorité aux signaux ayant déjà de la traction, tout en gardant les
+    # signaux récents : cela permet de découvrir une montée avant le pic.
+    ordered = sorted(
+        signals,
+        key=lambda x: (
+            x.get("engagement", 0),
+            -float(x.get("age_minutes") or 60),
+        ),
+        reverse=True,
+    )
+
+    for signal in ordered[:300]:
+        best = None
+        best_sim = 0.0
+        for cluster in clusters:
+            representative = max(
+                cluster["signals"],
+                key=lambda x: x.get("engagement", 0),
+            )
+            sim = trend_similarity(signal, representative)
+            if sim >= 0.24 and sim > best_sim:
+                best = cluster
+                best_sim = sim
+
+        if best is None:
+            clusters.append({"signals": [signal]})
+        else:
+            best["signals"].append(signal)
+
+    for cluster in clusters:
+        cluster["score"] = trend_cluster_score(cluster)
+        cluster["fingerprint"] = make_trend_fingerprint(cluster)
+
+    return sorted(clusters, key=lambda x: x["score"], reverse=True)
+
+
+def make_trend_fingerprint(cluster):
+    # Fingerprint stable par contenu + plateforme, sans dépendre d'un texte
+    # exact ou d'un seul post.
+    texts = [x.get("text", "") for x in cluster["signals"]]
+    words = sorted(normalize_words(" ".join(texts)))
+    platforms = sorted(set(x.get("source", "") for x in cluster["signals"]))
+    return "|".join(platforms) + "::" + "|".join(words[:24])
+
+
+def trend_is_duplicate(cluster, previous):
+    current_text = " ".join(x.get("text", "") for x in cluster["signals"][:12])
+    for item in previous:
+        try:
+            dt = parse_iso_date(item.get("detected_at", ""))
+            if dt is None or age_minutes(dt) < 0 or age_minutes(dt) > TREND_MEMORY_HOURS * 60:
+                continue
+            old_text = item.get("text", "")
+            if similarity(current_text, old_text) >= 0.34:
+                return True
+            if item.get("fingerprint") == cluster.get("fingerprint"):
+                return True
+        except Exception:
+            continue
+    return False
+
+
+def select_trend_clusters(clusters):
+    previous = load_json_list(TREND_EVENT_FILE)
+    selected = []
+
+    for cluster in clusters:
+        if cluster["score"] < 18:
+            continue
+        if trend_is_duplicate(cluster, previous):
+            continue
+        selected.append(cluster)
+        if len(selected) >= MAX_TREND_FLASHES_PER_RUN:
+            break
+
+    return selected
+
+
+def build_trend_source(cluster):
+    parts = []
+    for i, item in enumerate(cluster["signals"][:12], 1):
+        metrics = item.get("metrics", {})
+        parts.append(
+            f"SIGNAL {i}\n"
+            f"Plateforme: {item.get('source','')}\n"
+            f"Auteur: {item.get('author_name') or item.get('author','')}\n"
+            f"Communauté: {item.get('subreddit','')}\n"
+            f"Âge du signal: {item.get('age_minutes', '')} minutes\n"
+            f"Engagement: {item.get('engagement', 0)}\n"
+            f"Métriques: {json.dumps(metrics, ensure_ascii=False)}\n"
+            f"Texte: {item.get('text','')}\n"
+            f"URL: {item.get('link','')}"
+        )
+    return "\n\n".join(parts)
+
+
+def analyze_trend_with_gemini(source_text):
+    prompt = f"""
+Tu analyses une tendance émergente sur Internet à partir de publications publiques.
+Il est INTERDIT de supposer à l'avance un domaine ou un thème : cela peut concerner
+n'importe quoi. Ne rejette pas un sujet parce qu'il paraît banal. Ce qui compte est
+la dynamique d'attention observée et la cohérence du phénomène.
+
+Détermine :
+1) ce dont les internautes parlent réellement ;
+2) pourquoi ces publications semblent former un même phénomène ;
+3) ce qui est observable sur sa diffusion ;
+4) un titre français court et factuel.
+
+Ne transforme pas une rumeur en fait. Si une affirmation n'est pas vérifiée,
+dis-le explicitement. N'invente aucune donnée d'audience.
+
+Réponds exactement :
+OUI
+TITRE: ...
+RESUME: ...
+POURQUOI: ...
+
+ou uniquement :
+NON
+
+DONNEES:
+{source_text}
+"""
+    payload = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {"temperature": 0.0, "maxOutputTokens": 260},
+    }
+    url = (
+        "https://generativelanguage.googleapis.com/"
+        "v1beta/models/gemini-3.5-flash-lite:generateContent?key="
+        + GEMINI_API_KEY
+    )
+    request = urllib.request.Request(
+        url,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=60) as response:
+            result = json.loads(response.read().decode("utf-8"))
+        text = result["candidates"][0]["content"]["parts"][0]["text"].strip()
+        if re.fullmatch(r"NON", text, flags=re.I):
+            return None
+        title = re.search(r"(?im)^TITRE:\s*(.+)$", text)
+        summary = re.search(r"(?im)^RESUME:\s*(.+)$", text)
+        why = re.search(r"(?im)^POURQUOI:\s*(.+)$", text)
+        if not title or not summary:
+            return None
+        return {
+            "title": title.group(1).strip(),
+            "summary": summary.group(1).strip(),
+            "why": why.group(1).strip() if why else "",
+        }
+    except Exception as exc:
+        print("ERREUR GEMINI TENDANCE:", exc)
+        return None
+
+
+def send_trend(cluster):
+    source = build_trend_source(cluster)
+    result = analyze_trend_with_gemini(source)
+    if result is None:
+        print("Tendance rejetée par Gemini")
+        return False
+
+    detected_at = datetime.now(timezone.utc)
+    strongest = max(
+        cluster["signals"],
+        key=lambda x: x.get("engagement", 0),
+    )
+    source_date = parse_iso_date(str(strongest.get("date", "")))
+    platforms = sorted(set(x.get("source", "") for x in cluster["signals"]))
+    link = strongest.get("link", "")
+
+    text = (
+        f"🔥 <b>TENDANCE — {result['title'].upper()}</b>\n\n"
+        f"{result['summary']}\n\n"
+        f"📈 {result['why']}\n"
+        f"🌐 {', '.join(platforms)}\n"
+        f"🕒 Détecté : {detected_at.astimezone(PARIS_TZ).strftime('%H:%M')}\n"
+    )
+    if source_date:
+        text += f"📰 Signal source : {source_date.astimezone(PARIS_TZ).strftime('%H:%M')}\n"
+    if link.startswith(("http://", "https://")):
+        safe_link = link.replace("&", "&amp;").replace('"', "&quot;")
+        text += f'🔗 <a href="{safe_link}">Voir le signal</a>'
+
+    url = "https://api.telegram.org/bot" + TELEGRAM_BOT_TOKEN + "/sendMessage"
+    data = urllib.parse.urlencode({
+        "chat_id": TELEGRAM_CHAT_ID,
+        "text": text,
+        "parse_mode": "HTML",
+        "disable_web_page_preview": "true",
+    }).encode("utf-8")
+    request = urllib.request.Request(url, data=data, method="POST")
+    sent_at = datetime.now(timezone.utc)
+    with urllib.request.urlopen(request, timeout=30) as response:
+        response.read()
+    sent_at = datetime.now(timezone.utc)
+
+    history = load_json_list(TREND_EVENT_FILE)
+    history.append({
+        "fingerprint": cluster["fingerprint"],
+        "text": " ".join(x.get("text", "") for x in cluster["signals"][:12]),
+        "detected_at": detected_at.isoformat(),
+        "sent_at": sent_at.isoformat(),
+        "score": cluster["score"],
+        "sources": platforms,
+    })
+    save_json_list(TREND_EVENT_FILE, history, limit=500)
+    print("TENDANCE envoyée | score=", cluster["score"], "|", ", ".join(platforms))
+    return True
 
 
 # ============================================================
@@ -841,16 +1277,17 @@ def select_flash_clusters(clusters):
     now = datetime.now(timezone.utc)
 
     recent_keys = set()
+    recent_memory = []
 
     for item in previous:
-        dt = parse_iso_date(item.get("date", ""))
+        dt = parse_iso_date(item.get("detected_at") or item.get("date", ""))
         if not dt:
             continue
 
-        if 0 <= (now - dt).total_seconds() / 3600 <= EVENT_MEMORY_HOURS:
-            recent_keys.add(
-                item.get("fingerprint", "")
-            )
+        age_h = (now - dt).total_seconds() / 3600
+        if 0 <= age_h <= EVENT_MEMORY_HOURS:
+            recent_keys.add(item.get("fingerprint", ""))
+            recent_memory.append(item)
 
     for cluster in clusters:
         signals = cluster["signals"]
@@ -987,14 +1424,24 @@ def select_flash_clusters(clusters):
 
         fingerprint = make_cluster_fingerprint(cluster)
 
-        if fingerprint in recent_keys or recent_event_is_repeat(cluster, previous):
-            print("  -> REJET: événement déjà envoyé / reformulation du même événement")
+        if fingerprint in recent_keys:
+            print("  -> REJET: événement déjà envoyé")
+            continue
+
+        current_text = event_text(cluster["signals"][0]) + " " + " ".join(
+            event_text(x) for x in cluster["signals"][1:6]
+        )
+        lexical_duplicate = False
+        for old_event in recent_memory:
+            old_text = old_event.get("semantic_text", "")
+            if old_text and similarity(current_text, old_text) >= 0.34:
+                lexical_duplicate = True
+                break
+        if lexical_duplicate:
+            print("  -> REJET: événement sémantiquement déjà couvert (mémoire 24h)")
             continue
 
         cluster["fingerprint"] = fingerprint
-        identity, actors = make_cluster_identity(cluster)
-        cluster["identity"] = identity
-        cluster["actors"] = actors
         selected.append(cluster)
 
         if len(selected) >= MAX_FLASHES_PER_RUN:
@@ -1003,70 +1450,25 @@ def select_flash_clusters(clusters):
     return selected
 
 
-def make_cluster_identity(cluster):
+def make_cluster_fingerprint(cluster):
     pieces = []
-    actors = []
+
     for signal in cluster["signals"]:
         if signal["kind"] == "gdelt":
-            for key in ("actor1", "actor2"):
-                value = str(signal.get(key, "")).strip()
-                if value:
-                    actors.append(value)
             pieces.extend([
                 signal.get("actor1", ""),
                 signal.get("actor2", ""),
                 signal.get("location", ""),
                 signal.get("country", ""),
-                signal.get("context", ""),
             ])
         else:
             pieces.append(signal.get("text", ""))
 
-    return " ".join(pieces), actors
-
-
-def make_cluster_fingerprint(cluster):
-    identity, actors = make_cluster_identity(cluster)
-    words = sorted(normalize_words(identity))
-    actor_words = sorted(normalize_words(" ".join(actors)))
-    return "|".join((actor_words + words)[:30])
-
-
-def recent_event_is_repeat(cluster, previous):
-    identity, actors = make_cluster_identity(cluster)
-    current_words = normalize_words(identity)
-    current_actors = normalize_words(" ".join(actors))
-    current_country = " ".join(
-        sorted({
-            str(x.get("country", "")).strip().lower()
-            for x in cluster["signals"]
-            if x.get("kind") == "gdelt" and x.get("country")
-        })
+    words = sorted(
+        normalize_words(" ".join(pieces))
     )
 
-    for item in previous:
-        old_identity = str(item.get("identity") or "")
-        if not old_identity:
-            old_identity = str(item.get("title") or "") + " " + str(item.get("summary") or "")
-        old_words = normalize_words(old_identity)
-        if not old_words or not current_words:
-            continue
-
-        old_country = str(item.get("country") or "").strip().lower()
-        sim = len(current_words & old_words) / max(1, len(current_words | old_words))
-
-        # Même pays + acteurs communs : seuil volontairement plus bas pour
-        # détecter une nouvelle dépêche reformulant exactement le même fait.
-        old_actors = normalize_words(str(item.get("actors") or ""))
-        actor_overlap = len(current_actors & old_actors)
-        if current_country and old_country and current_country == old_country and actor_overlap >= 1 and sim >= 0.25:
-            return True
-        if actor_overlap >= 2 and sim >= 0.28:
-            return True
-        if sim >= 0.50:
-            return True
-
-    return False
+    return "|".join(words[:18])
 
 
 # ============================================================
@@ -1242,6 +1644,64 @@ def format_time(date_string):
     return dt.astimezone(PARIS_TZ).strftime("%H:%M")
 
 
+def semantic_duplicate_with_gemini(cluster, result):
+    """Vérifie sémantiquement si le FLASH est le même événement qu'un FLASH récent."""
+    history = load_json_list(EVENT_FILE)
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=EVENT_MEMORY_HOURS)
+    candidates = []
+    for item in history:
+        dt = parse_iso_date(item.get("detected_at") or item.get("date", ""))
+        if dt and dt >= cutoff:
+            candidates.append(item)
+    if not candidates:
+        return False
+
+    candidates = candidates[-12:]
+    previous = "\n".join(
+        f"ID {i}: {x.get('title','')} — {x.get('summary','')} — {x.get('semantic_text','')}"
+        for i, x in enumerate(candidates)
+    )
+    prompt = f"""
+Compare le nouveau candidat avec les FLASH déjà envoyés ci-dessous.
+Réponds uniquement DUPLICATE ou NOUVEAU.
+DUPLICATE signifie : même événement réel, même phénomène concret ou même
+information principale, même si les formulations, sources ou langues diffèrent.
+NOUVEAU signifie : événement distinct ou développement réellement nouveau.
+Ne considère pas comme différent le simple changement de formulation ou de média.
+
+NOUVEAU CANDIDAT:
+Titre: {result.get('title','')}
+Résumé: {result.get('summary','')}
+Signaux: {event_text(cluster['signals'][0])}
+
+FLASH RÉCENTS:
+{previous}
+"""
+    payload = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {"temperature": 0.0, "maxOutputTokens": 20},
+    }
+    url = (
+        "https://generativelanguage.googleapis.com/"
+        "v1beta/models/gemini-3.5-flash-lite:generateContent?key="
+        + GEMINI_API_KEY
+    )
+    request = urllib.request.Request(
+        url,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=45) as response:
+            data = json.loads(response.read().decode("utf-8"))
+        answer = data["candidates"][0]["content"]["parts"][0]["text"].strip().upper()
+        return "DUPLICATE" in answer and "NOUVEAU" not in answer
+    except Exception as exc:
+        print("Vérification doublon Gemini impossible:", exc)
+        return False
+
+
 def send_flash(cluster):
     source = build_cluster_source(cluster)
 
@@ -1249,6 +1709,10 @@ def send_flash(cluster):
 
     if result is None:
         print("FLASH rejeté par le filtre éditorial Gemini | raison non détaillée")
+        return False
+
+    if semantic_duplicate_with_gemini(cluster, result):
+        print("FLASH rejeté : doublon sémantique détecté dans les dernières 24h")
         return False
 
     title = result["title"]
@@ -1280,10 +1744,12 @@ def send_flash(cluster):
         else ""
     )
 
-    latest_date = max(
+    detected_at = datetime.now(timezone.utc)
+    source_signal_date = min(
         [
             x.get("date", "")
             for x in cluster["signals"]
+            if x.get("date")
         ]
         or [""]
     )
@@ -1309,7 +1775,8 @@ def send_flash(cluster):
     text = (
         f"🔴 <b>FLASH — {title.upper()}</b>\n\n"
         f"{summary}\n\n"
-        f"🕒 {format_time(latest_date)}\n"
+        f"🕒 Détecté : {detected_at.astimezone(PARIS_TZ).strftime('%H:%M')}\n"
+        f"📰 Signal source : {format_time(source_signal_date) if source_signal_date else 'inconnu'}\n"
         f"📡 {', '.join(sources)}\n"
     )
 
@@ -1342,18 +1809,21 @@ def send_flash(cluster):
         timeout=30
     ) as response:
         response.read()
+    sent_at = datetime.now(timezone.utc)
 
     events = load_json_list(EVENT_FILE)
 
-    identity, actors = make_cluster_identity(cluster)
     events.append({
         "fingerprint": cluster["fingerprint"],
-        "identity": identity,
-        "actors": " ".join(actors),
-        "country": result.get("country", ""),
+        "date": source_signal_date,
+        "detected_at": detected_at.isoformat(),
+        "sent_at": sent_at.isoformat(),
+        "source_signal_at": source_signal_date,
+        "semantic_text": event_text(cluster["signals"][0]) + " " + " ".join(
+            event_text(x) for x in cluster["signals"][1:8]
+        ),
         "title": title,
         "summary": summary,
-        "date": latest_date,
         "score": cluster["score"],
         "sources": sources,
     })
@@ -1400,10 +1870,22 @@ def main():
 
     gdelt_events = read_gdelt_events()
 
+    # Nouveau radar : découverte de tendances sociales sans liste de thèmes.
+    social_signals = get_x_signals() + get_reddit_signals()
+    if social_signals:
+        trend_clusters = build_trend_clusters(social_signals)
+        print("Tendances sociales candidates:", len(trend_clusters))
+        trend_selected = select_trend_clusters(trend_clusters)
+        print("TENDANCES retenues:", len(trend_selected))
+        for trend in trend_selected:
+            send_trend(trend)
+    else:
+        print("Aucun capteur social direct configuré ou aucun signal récent.")
+
     signals = gdelt_events + telegram_posts
 
     print(
-        "Signaux récents:",
+        "Signaux événementiels récents:",
         len(signals)
     )
 
