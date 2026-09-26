@@ -1711,5 +1711,18 @@
     "sources": [
       "thehindu.com"
     ]
+  },
+  {
+    "fingerprint": "congress|house|lawmaker|president|senate|states|united|white|531871|billion|bypasses|congress|diversity|funding|house|immigrant|initiatives|lawmaker|maneuver|nearly|president|rare|senate|services|spending|states|targets|trump|united|wapt",
+    "identity": " LAWMAKER 531871 3 Trump bypasses Congress to cut nearly $1 billion in spending - WAPT — The rare maneuver targets funding for immigrant services and diversity initiatives. LAWMAKER PRESIDENT 531871 3 Trump bypasses Congress to cut nearly $1 billion in spending - WAPT — The rare maneuver targets funding for immigrant services and diversity initiatives. UNITED STATES THE WHITE HOUSE 531871 3 Trump bypasses Congress to cut nearly $1 billion in spending - WAPT — The rare maneuver targets funding for immigrant services and diversity initiatives. CONGRESS THE WHITE HOUSE 531871 3 Trump bypasses Congress to cut nearly $1 billion in spending - WAPT — The rare maneuver targets funding for immigrant services and diversity initiatives. SENATE THE WHITE HOUSE 531871 3 Trump bypasses Congress to cut nearly $1 billion in spending - WAPT — The rare maneuver targets funding for immigrant services and diversity initiatives. THE WHITE HOUSE CONGRESS 531871 3 Trump bypasses Congress to cut nearly $1 billion in spending - WAPT — The rare maneuver targets funding for immigrant services and diversity initiatives.",
+    "actors": "LAWMAKER LAWMAKER PRESIDENT UNITED STATES THE WHITE HOUSE CONGRESS THE WHITE HOUSE SENATE THE WHITE HOUSE THE WHITE HOUSE CONGRESS",
+    "country": "États-Unis",
+    "title": "États-Unis : Trump contourne le Congrès pour couper 1 milliard de dollars",
+    "summary": "L'administration américaine utilise une manœuvre rare pour supprimer près d'un milliard de dollars de dépenses, ciblant particulièrement les services aux immigrants et les initiatives de diversité.",
+    "date": "2026-09-26T13:30:00+00:00",
+    "score": 31,
+    "sources": [
+      "wapt.com"
+    ]
   }
 ]
