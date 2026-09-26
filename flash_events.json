@@ -1698,5 +1698,18 @@
     "sources": [
       "juneesoutherncross.com.au"
     ]
+  },
+  {
+    "fingerprint": "nations|russia|united|2960561|aerial|amid|attacks|calls|dead|deadly|drone|economic|exchange|frontline|gains|hindu|intense|intensifies|international|least|nations|persists|russia|sanctions|stalled|strikes|targets|ukraine|united",
+    "identity": "UNITED NATIONS RUSSIA -2960561 4 At least 7 dead as Russia, Ukraine exchange strikes and aerial war intensifies - The Hindu — Intense Russia-Ukraine aerial war persists with deadly strikes, drone attacks, and economic targets amid stalled frontline gains and international calls for sanctions.",
+    "actors": "UNITED NATIONS RUSSIA",
+    "country": "Ukraine",
+    "title": "Intensification des frappes aériennes croisées entre la Russie et l'Ukraine",
+    "summary": "Au moins sept personnes ont été tuées dans de nouvelles frappes aériennes mutuelles et attaques de drones entre la Russie et l'Ukraine, marquant une intensification de la guerre aérienne.",
+    "date": "2026-09-26T12:45:00+00:00",
+    "score": 20,
+    "sources": [
+      "thehindu.com"
+    ]
   }
 ]
