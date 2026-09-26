@@ -45,7 +45,7 @@ MAX_FLASHES_PER_RUN = 2
 MAX_TREND_FLASHES_PER_RUN = 2
 TREND_MEMORY_HOURS = 24
 TREND_EVENT_FILE = "flash_trends.json"
-X_BEARER_TOKEN = os.environ.get("X_BEARER_TOKEN", "").strip()
+X_BEARER_TOKEN = re.sub(r"\s+", "", os.environ.get("X_BEARER_TOKEN", ""))
 X_QUERIES = [q.strip() for q in os.environ.get("X_QUERIES", "-is:retweet").split("||") if q.strip()]
 REDDIT_SUBREDDITS = [
     q.strip()
