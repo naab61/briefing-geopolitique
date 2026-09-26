@@ -1685,5 +1685,18 @@
     "sources": [
       "gazettextra.com"
     ]
+  },
+  {
+    "fingerprint": "pakistani|taliban|bombing|checkpoint|claimed|cross|junee|kills|least|northwestern|pakistan|pakistani|police|post|responsibility|southern|suicide|taliban",
+    "identity": "PAKISTANI TALIBAN AF 1 Bombing at police post in Pakistan kills at least 11 | Southern Cross | Junee, NSW — The Pakistani Taliban has claimed responsibility for a suicide bombing at a police checkpoint in northwestern Pakistan that...",
+    "actors": "PAKISTANI TALIBAN",
+    "country": "Pakistan",
+    "title": "Pakistan : Attentat-suicide contre un poste de police",
+    "summary": "Un attentat-suicide revendiqué par les Taliban pakistanais a frappé un point de contrôle policier dans le nord-ouest du Pakistan, faisant au moins 11 morts. Cet événement sécuritaire majeur justifie une alerte immédiate.",
+    "date": "2026-09-26T12:30:00+00:00",
+    "score": 26,
+    "sources": [
+      "juneesoutherncross.com.au"
+    ]
   }
 ]
