@@ -22,8 +22,10 @@ jobs:
 
           token = "".join(os.environ.get("X_BEARER_TOKEN", "").split())
 
+          url = "https://api.x.com/2/tweets/search/recent?query=-is%3Aretweet&max_results=10"
+
           request = urllib.request.Request(
-              "https://api.x.com/2/users/me",
+              url,
               headers={
                   "Authorization": "Bearer " + token,
                   "User-Agent": "FlashTrendRadar/12.0"
@@ -33,12 +35,13 @@ jobs:
           try:
               with urllib.request.urlopen(request, timeout=30) as response:
                   print("X TEST :", response.status)
-                  print("X authentification : OK")
+                  print("X Recent Search : OK")
+                  print(response.read().decode("utf-8")[:500])
           except urllib.error.HTTPError as e:
               print("X TEST :", e.code)
-              print("X authentification : REFUSÉE")
+              print("X Recent Search : REFUSÉ")
+              print(e.read().decode("utf-8")[:1000])
           PY
-
       - name: Exécuter FLASH
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
