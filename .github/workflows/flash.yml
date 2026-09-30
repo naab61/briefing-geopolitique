@@ -22,7 +22,7 @@ jobs:
 
           token = "".join(os.environ.get("X_BEARER_TOKEN", "").split())
 
-          url = "https://api.x.com/2/tweets/search/recent?query=-is%3Aretweet&max_results=10"
+          url = "https://api.x.com/2/users/by/username/X"
 
           request = urllib.request.Request(
               url,
